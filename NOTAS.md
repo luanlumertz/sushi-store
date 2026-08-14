@@ -1,0 +1,21 @@
+- Criei o componente footer.tsx e integrei no page.tsx.
+- Criei o componente header.tsx, onde o themetoggle vai morar, que por sua vez adicionei icones e trraduzi o dropdown menu.
+- Criei um subComponente dentro do header.tsx chamado CartSidebar onde o shadcn implementa um menu lateral para finalizar a compra.
+- Criei o Skeleton do site que é chamado pelo <Suspense> dentro de page.tsx enqunato o componente dentro dele não carrega.
+- Criei a parte de Tabs dos produtos onde ficou configurado o <TabList> e o <TabContent>.
+- Criei uma Promisse que simula um servidor com um setTimeOut de 2 segundos, que pega os dados do "servidor" e envia para Tab poder renderizar.
+- Fiz uma requisiçao no componente tsb.tsx onde osTabs estão para que <TabList> e o <TabContent> possam ser renderizados de forma dinâmica atraves do .map().
+- Fiz com que cada item que for chamado através do .map() acima chame o componente ProductItem para renderizar a foto e suas informações.
+- ProductItem agora renderiza as imagens e informações adicionais com a implementação de um toast, que exibi uma notificação personalizada ao adicionar um item ao ccarrinho.
+- Foi criado o componente cart-store.ts onde foi implementado todo o contexto do que será feito com os produtos, onde verifica se o elemento ja existe ou n
+ão e adicona ou subtrai a quantidade desejada.
+- O componente acima foi chamado no componente ProductItem para podermos implementar de fato atráves do hook upsertCartItem, a incrementação de qunatidades.  
+- Uma vez que o Zustand fornece as informações necessarias para sidebar.tsx agora é possível preencher o subtotal juntamente com o preview das imagens dos itens selecionados.
+- Agora foi criado o componente item-qunatity dentro de cart > item.tsx que será responsável pela parte de adicionar ou subtrair 1 do pedido.
+- Voltando para sidebar, impletei o Modal que ira mostrar o checkout do pedido através de um state booleano no botão 'finalizar compra' que passa para o componente shadcn dialog se deve ou não mostrar o modal e uma função para alterar o boolean, além disso foi incrementado o componente shadcn Progress que exibi uma barra de progresso acima no modal.
+- Projetei dentro de dialog.tsx um state que vai definir qual componente mostrar na tela atraves de tipos literais como 'user', 'address' e 'finish'.
+- Foi criado o componente checkout-store.tsx que será responsável por guardar os dados do usuário, alterar eles, e disponibilizar para quem chamar o hook do zustand.
+- Criei a primeira parte do modal, a parte de "user", onde é apenas settado o nome do usuário, logo após isso é guardado o nome no onSubmit juntamente com a atualização do estado do modal que mudou para "address".
+- Já no address, o procedimento foi bem parecido, apenas mudando alguns campos, a principal mudança foi no <Field> de estado, onde foi implementado o componente shadcn <Select> que serve para selecionar uma entre várias opções de estados. E também implementei o botão voltar que settava o state do modal novamente para "user". 
+- Agora no state do modal "finish" foi implementado uma mensagem genérica para ser enviado ao clicar no botão para concluir, onde por sua vez possui um link personalizado com o número definido pelo arquivo .env com a propriedade do Next NEXT_PUBLIC_{algum nome} = "5511999999999".   
+- Para finalizar o projeto, foi implementado a mensagem personalizada que será enviado ao WhatsApp do número definido, contento as informações do usuário e do pedido, concedido pelo zustand através do seu "contexto global".
