@@ -1,13 +1,13 @@
-import { useCheckoutStore } from "@/stores/checkout-store"
-import { CheckoutSteps } from "@/types/checkout-steps"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Dispatch, SetStateAction } from "react"
-import { useForm } from "react-hook-form"
-import { literal, z } from "zod"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { useCheckoutStore } from "@/stores/checkout-store";
+import { CheckoutSteps } from "@/types/checkout-steps";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dispatch, SetStateAction } from "react";
+import { useForm } from "react-hook-form";
+import { literal, z } from "zod";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 // Usando o Zod para tipar o formulário
 const formSchema = z.object({
@@ -16,28 +16,28 @@ const formSchema = z.object({
     complement: z.string().min(2, "Mínimo 2 caracteres").or(literal("")),
     district: z.string().min(2, "Preencha o bairro"),
     city: z.string().min(2, "Preencha a cidade"),
-    state: z.string().min(2, "Preencha o estado")
-})
+    state: z.string().min(2, "Preencha o estado"),
+});
 
 // Tipando a função recebida via Props
 type Props = {
-    setStep: Dispatch<SetStateAction<CheckoutSteps>>
-}
+    setStep: Dispatch<SetStateAction<CheckoutSteps>>;
+};
 
 export const StepAddress = ({ setStep }: Props) => {
-    const { address, setAddress } = useCheckoutStore(state => state)
+    const { address, setAddress } = useCheckoutStore((state) => state);
 
     // Cirando o cérebro do formulário juntamente com o Zod
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: { ...address }
-    })
+        defaultValues: { ...address },
+    });
 
     // Definindo o que acontece caso o dado enviado seja válido, ou seja, setta o endereço completo e vai para a próxima página
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        setAddress(values)
-        setStep("finish")
-    }
+        setAddress(values);
+        setStep("finish");
+    };
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -76,7 +76,10 @@ export const StepAddress = ({ setStep }: Props) => {
                 {/* Um campo Field diferente usando o <Select> do shadcn para poder abrir várias opções definidas dos 27 estados do Brasil. */}
                 <Field data-invalid={!!form.formState.errors.state}>
                     <FieldLabel>Estado</FieldLabel>
-                    <Select defaultValue={address.state} onValueChange={(value) => form.setValue("state", value)}>
+                    <Select
+                        defaultValue={address.state}
+                        onValueChange={(value) => form.setValue("state", value)}
+                    >
                         <SelectTrigger>
                             <SelectValue placeholder="Estado"></SelectValue>
                         </SelectTrigger>
@@ -112,14 +115,15 @@ export const StepAddress = ({ setStep }: Props) => {
                     </Select>
                     <FieldError>{form.formState.errors.state?.message}</FieldError>
                 </Field>
-
             </div>
 
             <div className="flex justify-between mt-4">
                 {/* Botão para voltar */}
-                <Button variant={"link"} onClick={() => setStep("user")}>Voltar</Button>
+                <Button variant={"link"} onClick={() => setStep("user")}>
+                    Voltar
+                </Button>
                 <Button type="submit">Concluir</Button>
             </div>
         </form>
-    )
-}
+    );
+};

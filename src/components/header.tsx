@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import dynamic from "next/dynamic"
-import { Logo } from "@/components/logo"
+import dynamic from "next/dynamic";
+import { Logo } from "@/components/logo";
 
 // Alteração feita pelo copilot para solucionar erros de Hydratation
 const ThemeToggle = dynamic(
-  () => import("@/components/theme-toggle").then((mod) => mod.ThemeToggle),
-  {
-    ssr: false,
-  }
-)
+    () => import("@/components/theme-toggle").then((mod) => mod.ThemeToggle),
+    {
+        ssr: false,
+    },
+);
 
 const CartSidebar = dynamic(
-  () => import("@/components/cart/sidebar").then((mod) => mod.CartSidebar),
-  {
-    ssr: false,
-  }
-)
+    () => import("@/components/cart/sidebar").then((mod) => mod.CartSidebar),
+    {
+        ssr: false,
+    },
+);
 // Fim das alterações do copilot.
 
 export const Header = () => {
@@ -31,5 +31,5 @@ export const Header = () => {
                 <CartSidebar />
             </div>
         </header>
-    )
-}
+    );
+};

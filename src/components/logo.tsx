@@ -3,5 +3,5 @@ export const Logo = () => {
         <div className="text-xl">
             Loja <span className="font-bold">Zap</span>
         </div>
-    )
-}
+    );
+};

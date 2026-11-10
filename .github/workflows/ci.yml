@@ -1,0 +1,63 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+        types: [opened, synchronize, reopened]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    quality:
+        name: Qualidade e build
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        env:
+            HUSKY: "0"
+
+        steps:
+            - name: Obter código
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+
+            - name: Verificar espaços e conflitos no diff
+              env:
+                  BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+              run: |
+                  if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+                    BASE_SHA="$(git hash-object -t tree /dev/null)"
+                  fi
+
+                  git diff --check "$BASE_SHA" HEAD
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: npm
+
+            - name: Instalar dependências
+              run: npm ci
+
+            - name: Verificar formatação
+              run: npm run format:check
+
+            - name: Verificar ESLint
+              run: npm run lint
+
+            - name: Verificar tipos TypeScript
+              run: npx tsc --noEmit
+
+            - name: Gerar build de produção
+              run: npm run build

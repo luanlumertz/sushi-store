@@ -4,5 +4,5 @@ export const ProductEmpty = () => {
             <p className="text-3xl font-bold">Ops!</p>
             <p className="mt-4">Infelizmente não temos produtos nessa categoria</p>
         </div>
-    )
-}
+    );
+};
