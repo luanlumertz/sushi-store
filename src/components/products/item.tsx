@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { Product } from "@/types/product"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
-import { useCartStore } from "@/stores/cart-store"
-import Image from "next/image"
+import { Product } from "@/types/product";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useCartStore } from "@/stores/cart-store";
+import Image from "next/image";
 
 type Props = {
-    item: Product
-}
+    item: Product;
+};
 
 export const ProductItem = ({ item }: Props) => {
-    const { upsertCartItem } = useCartStore(state => state)
-    
+    const { upsertCartItem } = useCartStore((state) => state);
+
     const handleAddButton = () => {
         // Manda para cart-store o item da vez e a qunatidade que quer adicionar.
-        upsertCartItem(item, 1)
+        upsertCartItem(item, 1);
 
         // É passado o nome, descrição e o label de undo da notificação que é exibida ao adicionar o produto no carrinho
         toast("Adicionado ao carrinho", {
@@ -23,9 +23,9 @@ export const ProductItem = ({ item }: Props) => {
             action: {
                 label: "Fechar",
                 onClick: () => console.log("Fechar"),
-            }
-        })
-    }
+            },
+        });
+    };
 
     return (
         <div>
@@ -43,13 +43,12 @@ export const ProductItem = ({ item }: Props) => {
             {/* div resposável pelas informações do produto */}
             <div className="flex flex-col mt-3 gap-3">
                 <p className="text-lg">{item.name}</p>
-                <p className="text-sm opacity-50">R$ {item.price.toFixed(2).replace('.', ',')}</p>
+                <p className="text-sm opacity-50">R$ {item.price.toFixed(2).replace(".", ",")}</p>
                 {/* Chama uma funcção que usa toast para exibir uma mensagem de notificação */}
-                <Button
-                    variant={"outline"}
-                    onClick={handleAddButton}
-                >Adicionar</Button>
+                <Button variant={"outline"} onClick={handleAddButton}>
+                    Adicionar
+                </Button>
             </div>
         </div>
-    )
-}
+    );
+};

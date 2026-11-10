@@ -1,7 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const TabsSkeleton = () => {
-    return(
+    return (
         <div>
             {/* Skeleton dos tabs (parte supperior) */}
             <Skeleton className="w-full h-10 rounded-xl" />
@@ -18,5 +18,5 @@ export const TabsSkeleton = () => {
                 ))}
             </div>
         </div>
-    )
-}
+    );
+};

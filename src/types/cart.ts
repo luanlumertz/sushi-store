@@ -1,6 +1,6 @@
-import { Product } from "@/types/product"
+import { Product } from "@/types/product";
 
 export type Cart = {
-    product: Product
-    quantity: number
-}
+    product: Product;
+    quantity: number;
+};

@@ -6,7 +6,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
     return new Promise((resolve) => {
         return setTimeout(() => {
             // Envia os dados do "servidor" para quem chamar após 2 seg
-            resolve(products)
+            resolve(products);
         }, 500);
-    }) 
-}
+    });
+};

@@ -1,28 +1,24 @@
-"use client"
+"use client";
 
 import {
-  ThemeProvider as NextThemesProvider,
-  type ThemeProviderProps,
-  useTheme,
-} from "next-themes"
+    ThemeProvider as NextThemesProvider,
+    type ThemeProviderProps,
+    useTheme,
+} from "next-themes";
 
-export type Theme = "light" | "dark" | "system"
+export type Theme = "light" | "dark" | "system";
 
 export function ThemeProvider({
-  children,
-  attribute = "class",
-  defaultTheme = "system",
-  ...props
+    children,
+    attribute = "class",
+    defaultTheme = "system",
+    ...props
 }: ThemeProviderProps) {
-  return (
-    <NextThemesProvider
-      attribute={attribute}
-      defaultTheme={defaultTheme}
-      {...props}
-    >
-      {children}
-    </NextThemesProvider>
-  )
+    return (
+        <NextThemesProvider attribute={attribute} defaultTheme={defaultTheme} {...props}>
+            {children}
+        </NextThemesProvider>
+    );
 }
 
-export { useTheme }
+export { useTheme };
