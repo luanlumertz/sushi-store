@@ -1,14 +1,14 @@
 import { useCartStore } from "@/stores/cart-store"
 import { useCheckoutStore } from "@/stores/checkout-store"
 
-export const generateMessage = () => {
+export const useGenerateMessage = () => {
     // Informações do usuário fornecida pelo Zustand
     const { name, address } = useCheckoutStore(state => state)
     // Informação do pedido também fornecida pelo Zustand
     const { cart } = useCartStore(state => state)
 
-    let orderProducts = []
-    for(let item of cart){
+    const orderProducts = []
+    for(const item of cart){
         orderProducts.push(`${item.quantity}x ${item.product.name}`)
     }
 

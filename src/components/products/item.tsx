@@ -4,6 +4,7 @@ import { Product } from "@/types/product"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useCartStore } from "@/stores/cart-store"
+import Image from "next/image"
 
 type Props = {
     item: Product
@@ -30,10 +31,13 @@ export const ProductItem = ({ item }: Props) => {
         <div>
             {/* div responsável por renderizar a imagem */}
             <div className="rounded-md overflow-hidden">
-                <img
+                <Image
                     src={item.image}
                     alt={item.name}
-                    className="w-full h-32 object-conver"
+                    width={400}
+                    height={300}
+                    sizes="(min-width: 896px) 201px, (min-width: 768px) calc(25vw - 23px), (min-width: 640px) calc(33.333vw - 24px), calc(50vw - 26px)"
+                    className="w-full h-32 object-fill"
                 />
             </div>
             {/* div resposável pelas informações do produto */}

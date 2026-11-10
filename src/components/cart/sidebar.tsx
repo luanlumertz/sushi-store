@@ -14,7 +14,7 @@ export const CartSidebar = () => {
 
     // faz um loop por todos os itens do carrinho e multiplica pelo seu respectivo valor
     let subtotal = 0
-    for (let item of cart) {
+    for (const item of cart) {
         subtotal += item.quantity * item.product.price
     }
 
@@ -35,7 +35,7 @@ export const CartSidebar = () => {
                 <SheetHeader className="pb-0">
                     <SheetTitle>Carrinho</SheetTitle>
                     <SheetDescription className="sr-only">
-                        "Este é o seu carrinho de compras, onde você pode revisar os itens antes de finalizar a compra."
+                        &quot;Este é o seu carrinho de compras, onde você pode revisar os itens antes de finalizar a compra.&quot;
                     </SheetDescription>
                 </SheetHeader>
 

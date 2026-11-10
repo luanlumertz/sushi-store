@@ -8,7 +8,7 @@ export const TabsSkeleton = () => {
 
             {/* Skeleton do conteúdo da página, o número de componentes é definido por length (linha 11) */}
             <div className="mt-5 grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-                {Array.from({ length: 6 }, (item, index) => (
+                {Array.from({ length: 6 }, (_item, index) => (
                     <div key={index}>
                         <Skeleton className="w-full h-32 rounded-xl" />
                         <Skeleton className="mt-2 w-full h-7 rounded-xl" />

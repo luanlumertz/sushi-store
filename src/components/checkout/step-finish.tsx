@@ -1,13 +1,13 @@
 import { useCheckoutStore } from "@/stores/checkout-store"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { generateMessage } from "@/lib/generate-message"
+import { useGenerateMessage } from "@/lib/generate-message"
 
 export const StepFinish = () => {
     const { name } = useCheckoutStore(state => state)
 
     // Mensagem personalizada usando o contexto do carrinho e sidebar
-    const message = generateMessage()
+    const message = useGenerateMessage()
     // link personalizado para o número de whatsapp definido pelo arquivo .env
     const linkZap = `https://wa.me//${process.env.NEXT_PUBLIC_ZAP}?text=${encodeURI(message)}`
 

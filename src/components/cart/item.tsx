@@ -1,5 +1,6 @@
 import { Cart } from "@/types/cart"
 import { CartItemQuantity } from "@/components/cart/item-quantity"
+import Image from "next/image"
 
 type Props = {
     item: Cart
@@ -11,9 +12,11 @@ export const CartItem = ({ item }: Props) => {
         <div className="flex items-center gap-4">
             {/* Mostra a imagem redimensionada */}
             <div className="w-16 overflow-hidden">
-                <img
+                <Image
                     src={item.product.image}
                     alt={item.product.name}
+                    width={64}
+                    height={48}
                     className="w-full h-auto object-cover rounded-md" />
             </div>
             {/* Mostra o nome e o preço do produto */}
