@@ -22,14 +22,23 @@ export const CartItemQuantity = ({ cartItem }: Props) => {
 
     return (
         <div className="flex items-center gap-2">
-            <Button onClick={handlePlusButton} variant={"outline"} size={"icon"} className="size-5">
+            <Button
+                onClick={handlePlusButton}
+                variant={"outline"}
+                size={"icon"}
+                aria-label={`Aumentar quantidade de ${cartItem.product.name}`}
+                className="size-5"
+            >
                 <PlusIcon className="size-5" />
             </Button>
+
             <div className="text-xs">{cartItem.quantity}</div>
+
             <Button
                 onClick={handleMinusButton}
                 variant={"outline"}
                 size={"icon"}
+                aria-label={`Diminuir quantidade de ${cartItem.product.name}`}
                 className="size-5"
             >
                 <MinusIcon className="size-5" />

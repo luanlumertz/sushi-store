@@ -73,7 +73,7 @@ export const CartSidebar = () => {
                             className="disabled:cursor-not-allowed"
                             onClick={() => setCheckoutOpen(true)}
                         >
-                            Fizalizar Compra
+                            Finalizar compra
                         </Button>
                     </div>
                 </div>

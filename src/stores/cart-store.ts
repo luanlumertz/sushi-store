@@ -34,7 +34,10 @@ export const useCartStore = create<States & Actions>()((set) => ({
             }
 
             //  Atráves do index que foi definido por productIndex que foi descoberto na primeira ou segunda oportunidade, é incrementado a qunatidade que foi passada.
-            newCart[productIndex].quantity += quantity;
+            newCart[productIndex] = {
+                ...newCart[productIndex],
+                quantity: newCart[productIndex].quantity + quantity,
+            };
 
             // Se caso o produto em questão volte a 0, ou seja, não existir, é apagado do carrinho.
             if (newCart[productIndex].quantity <= 0) {
