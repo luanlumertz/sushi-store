@@ -34,12 +34,13 @@ export const CheckoutDialog = ({ open, onOpenChange }: Props) => {
         // Defini através de Props recebidas se o Modal aparece e a função para alterar.
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
-                <DialogTitle className="hidden">...</DialogTitle>
                 <DialogHeader>
-                    {/* Com base no estado atual exibi uma dessas mensagens */}
-                    {step === "user" && "Dados Pessoais"}
-                    {step === "address" && "Endereço de entrega"}
-                    {step === "finish" && "Envio para o WhatsApp"}
+                    <DialogTitle>
+                        {/* Com base no estado atual exibi uma dessas mensagens */}
+                        {step === "user" && "Dados Pessoais"}
+                        {step === "address" && "Endereço de entrega"}
+                        {step === "finish" && "Envio para o WhatsApp"}
+                    </DialogTitle>
                 </DialogHeader>
 
                 {/* Isso é apenas a barra de progresso que fica em cima */}

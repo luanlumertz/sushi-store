@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 // Usando o Zod para tipar o formulário
 const formSchema = z.object({
-    name: z.string().min(2, "Preencha seu nome"),
+    name: z.string().trim().min(2, "Preencha seu nome"),
 });
 
 // Tipando a função recebida via Props
@@ -36,11 +36,22 @@ export const StepUser = ({ setStep }: Props) => {
     return (
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Field data-invalid={!!form.formState.errors.name}>
-                <FieldLabel>Seu nome</FieldLabel>
+                <FieldLabel htmlFor="checkout-name">Seu nome</FieldLabel>
 
-                <Input autoFocus placeholder="Qual seu nome?" {...form.register("name")} />
+                <Input
+                    id="checkout-name"
+                    autoFocus
+                    placeholder="Qual seu nome?"
+                    aria-invalid={!!form.formState.errors.name}
+                    aria-describedby={
+                        form.formState.errors.name ? "checkout-name-error" : undefined
+                    }
+                    {...form.register("name")}
+                />
 
-                <FieldError>{form.formState.errors.name?.message}</FieldError>
+                <FieldError id="checkout-name-error">
+                    {form.formState.errors.name?.message}
+                </FieldError>
             </Field>
 
             <Button type="submit" variant="outline">

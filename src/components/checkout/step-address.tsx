@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 // Usando o Zod para tipar o formulário
 const formSchema = z.object({
     street: z.string().min(2, "Preencha o endereço"),
-    number: z.string().min(2, "Preencha o número"),
+    number: z.string().trim().min(1, "Preencha o número"),
     complement: z.string().min(2, "Mínimo 2 caracteres").or(literal("")),
     district: z.string().min(2, "Preencha o bairro"),
     city: z.string().min(2, "Preencha a cidade"),
@@ -44,43 +44,98 @@ export const StepAddress = ({ setStep }: Props) => {
             <div className="grid grid-cols-2 gap-4">
                 {/* Diferente do campo nome aqui serão necessários vaiors <Field>s para cada campo do endereço */}
                 <Field data-invalid={!!form.formState.errors.street}>
-                    <FieldLabel>Rua</FieldLabel>
-                    <Input {...form.register("street")} />
-                    <FieldError>{form.formState.errors.street?.message}</FieldError>
+                    <FieldLabel htmlFor="checkout-street">Rua</FieldLabel>
+                    <Input
+                        id="checkout-street"
+                        aria-invalid={!!form.formState.errors.street}
+                        aria-describedby={
+                            form.formState.errors.street ? "checkout-street-error" : undefined
+                        }
+                        {...form.register("street")}
+                    />
+                    <FieldError id="checkout-street-error">
+                        {form.formState.errors.street?.message}
+                    </FieldError>
                 </Field>
 
                 <Field data-invalid={!!form.formState.errors.number}>
-                    <FieldLabel>Número</FieldLabel>
-                    <Input {...form.register("number")} />
-                    <FieldError>{form.formState.errors.number?.message}</FieldError>
+                    <FieldLabel htmlFor="checkout-number">Número</FieldLabel>
+                    <Input
+                        id="checkout-number"
+                        aria-invalid={!!form.formState.errors.number}
+                        aria-describedby={
+                            form.formState.errors.number ? "checkout-number-error" : undefined
+                        }
+                        {...form.register("number")}
+                    />
+                    <FieldError id="checkout-number-error">
+                        {form.formState.errors.number?.message}
+                    </FieldError>
                 </Field>
 
                 <Field data-invalid={!!form.formState.errors.complement}>
-                    <FieldLabel>Complemento</FieldLabel>
-                    <Input {...form.register("complement")} />
-                    <FieldError>{form.formState.errors.complement?.message}</FieldError>
+                    <FieldLabel htmlFor="checkout-complement">Complemento</FieldLabel>
+                    <Input
+                        id="checkout-complement"
+                        aria-invalid={!!form.formState.errors.complement}
+                        aria-describedby={
+                            form.formState.errors.complement
+                                ? "checkout-complement-error"
+                                : undefined
+                        }
+                        {...form.register("complement")}
+                    />
+                    <FieldError id="checkout-complement-error">
+                        {form.formState.errors.complement?.message}
+                    </FieldError>
                 </Field>
 
                 <Field data-invalid={!!form.formState.errors.district}>
-                    <FieldLabel>Bairro</FieldLabel>
-                    <Input {...form.register("district")} />
-                    <FieldError>{form.formState.errors.district?.message}</FieldError>
+                    <FieldLabel htmlFor="checkout-district">Bairro</FieldLabel>
+                    <Input
+                        id="checkout-district"
+                        aria-invalid={!!form.formState.errors.district}
+                        aria-describedby={
+                            form.formState.errors.district ? "checkout-district-error" : undefined
+                        }
+                        {...form.register("district")}
+                    />
+                    <FieldError id="checkout-district-error">
+                        {form.formState.errors.district?.message}
+                    </FieldError>
                 </Field>
 
                 <Field data-invalid={!!form.formState.errors.city}>
-                    <FieldLabel>Cidade</FieldLabel>
-                    <Input {...form.register("city")} />
-                    <FieldError>{form.formState.errors.city?.message}</FieldError>
+                    <FieldLabel htmlFor="checkout-city">Cidade</FieldLabel>
+                    <Input
+                        id="checkout-city"
+                        aria-invalid={!!form.formState.errors.city}
+                        aria-describedby={
+                            form.formState.errors.city ? "checkout-city-error" : undefined
+                        }
+                        {...form.register("city")}
+                    />
+                    <FieldError id="checkout-city-error">
+                        {form.formState.errors.city?.message}
+                    </FieldError>
                 </Field>
 
                 {/* Um campo Field diferente usando o <Select> do shadcn para poder abrir várias opções definidas dos 27 estados do Brasil. */}
                 <Field data-invalid={!!form.formState.errors.state}>
-                    <FieldLabel>Estado</FieldLabel>
+                    <FieldLabel htmlFor="checkout-state">Estado</FieldLabel>
                     <Select
                         defaultValue={address.state}
-                        onValueChange={(value) => form.setValue("state", value)}
+                        onValueChange={(value) =>
+                            form.setValue("state", value, { shouldValidate: true })
+                        }
                     >
-                        <SelectTrigger>
+                        <SelectTrigger
+                            id="checkout-state"
+                            aria-invalid={!!form.formState.errors.state}
+                            aria-describedby={
+                                form.formState.errors.state ? "checkout-state-error" : undefined
+                            }
+                        >
                             <SelectValue placeholder="Estado"></SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -113,13 +168,15 @@ export const StepAddress = ({ setStep }: Props) => {
                             <SelectItem value="to">Tocantins</SelectItem>
                         </SelectContent>
                     </Select>
-                    <FieldError>{form.formState.errors.state?.message}</FieldError>
+                    <FieldError id="checkout-state-error">
+                        {form.formState.errors.state?.message}
+                    </FieldError>
                 </Field>
             </div>
 
             <div className="flex justify-between mt-4">
                 {/* Botão para voltar */}
-                <Button variant={"link"} onClick={() => setStep("user")}>
+                <Button type="button" variant={"link"} onClick={() => setStep("user")}>
                     Voltar
                 </Button>
                 <Button type="submit">Concluir</Button>
