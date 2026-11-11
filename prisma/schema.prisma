@@ -1,8 +1,36 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
+}
+
+enum ContextType {
+    STORE
+    DEMO
+}
+
+model DataContext {
+    id        String      @id() @default(uuid())
+    type      ContextType
+    createdAt DateTime    @default(now())
+
+    demoSession DemoSession?
+
+    @@unique([id, type])
+}
+
+model DemoSession {
+    id          String      @id() @default(uuid())
+    tokenHash   String      @unique
+    contextId   String
+    contextType ContextType @default(DEMO)
+    createdAt   DateTime    @default(now())
+    expiresAt   DateTime
+
+    context DataContext @relation(fields: [contextId, contextType], references: [id, type], onDelete: Restrict)
+
+    @@unique([contextId, contextType])
 }
