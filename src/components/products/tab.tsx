@@ -4,6 +4,7 @@ import { Product } from "@/types/product";
 import { ProductEmpty } from "@/components/products/empty";
 import { ProductItem } from "@/components/products/item";
 import { connection } from "next/server";
+import { getCategories } from "@/services/category";
 
 type Tab = {
     title: string;
@@ -14,31 +15,14 @@ type Tab = {
 export const ProductsTab = async () => {
     // Busca o cardápio a cada requisição, sem fixar os dados no build.
     await connection();
-    const products = await getStoreProducts();
 
-    // As abas usam os mesmos slugs das categorias cadastradas pelo seed.
-    const tabs: Tab[] = [
-        {
-            title: "Sushi",
-            value: "sushi",
-            products: products.filter((item) => item.category === "sushi"),
-        },
-        {
-            title: "Temaki",
-            value: "temaki",
-            products: products.filter((item) => item.category === "temaki"),
-        },
-        {
-            title: "Combinados",
-            value: "pack",
-            products: products.filter((item) => item.category === "pack"),
-        },
-        {
-            title: "Bebidas",
-            value: "beverage",
-            products: products.filter((item) => item.category === "beverage"),
-        },
-    ];
+    const [products, categories] = await Promise.all([getStoreProducts(), getCategories()]);
+
+    const tabs: Tab[] = categories.map((category) => ({
+        title: category.name,
+        value: category.slug,
+        products: products.filter((product) => product.category === category.slug),
+    }));
 
     return (
         <Tabs defaultValue={"sushi"}>
