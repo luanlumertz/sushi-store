@@ -3,6 +3,8 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
+import { products } from "@/data/products";
+
 function createPrismaClient() {
     const connectionString = process.env.DATABASE_URL;
 
@@ -54,6 +56,37 @@ async function main() {
                 create: category,
             });
         }
+
+        for (const product of products) {
+            const category = await prisma.category.findUniqueOrThrow({
+                where: { slug: product.category },
+            });
+
+            const priceInCents = Math.round(product.price * 100);
+
+            const productId = `10000000-0000-4000-8000-${String(product.id).padStart(12, "0")}`;
+
+            await prisma.product.upsert({
+                where: {
+                    id: productId,
+                    contextId: storeContext.id,
+                },
+                update: {},
+                create: {
+                    id: productId,
+                    contextId: storeContext.id,
+                    categoryId: category.id,
+                    name: product.name,
+                    description: `${product.name} do catálogo inicial da Sushi Store.`,
+                    image: product.image,
+                    priceInCents,
+                    status: "PUBLISHED",
+                    isAvailable: true,
+                },
+            });
+        }
+
+        console.log("Produtos iniciais processados:", products.length);
     } finally {
         await prisma.$disconnect();
     }
