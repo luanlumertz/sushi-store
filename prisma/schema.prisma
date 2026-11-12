@@ -1,36 +1,72 @@
 generator client {
-    provider = "prisma-client"
-    output   = "../src/generated/prisma"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
 }
 
 enum ContextType {
-    STORE
-    DEMO
+  STORE
+  DEMO
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 model DataContext {
-    id        String      @id() @default(uuid())
-    type      ContextType
-    createdAt DateTime    @default(now())
+  id        String      @id() @default(uuid())
+  type      ContextType
+  createdAt DateTime    @default(now())
 
-    demoSession DemoSession?
+  demoSession DemoSession?
+  products    Product[]
 
-    @@unique([id, type])
+  @@unique([id, type])
 }
 
 model DemoSession {
-    id          String      @id() @default(uuid())
-    tokenHash   String      @unique
-    contextId   String
-    contextType ContextType @default(DEMO)
-    createdAt   DateTime    @default(now())
-    expiresAt   DateTime
+  id          String      @id() @default(uuid())
+  tokenHash   String      @unique
+  contextId   String
+  contextType ContextType @default(DEMO)
+  createdAt   DateTime    @default(now())
+  expiresAt   DateTime
 
-    context DataContext @relation(fields: [contextId, contextType], references: [id, type], onDelete: Restrict)
+  context DataContext @relation(fields: [contextId, contextType], references: [id, type], onDelete: Restrict)
 
-    @@unique([contextId, contextType])
+  @@unique([contextId, contextType])
+}
+
+model Category {
+  id        String @id @default(uuid())
+  name      String
+  slug      String @unique
+  sortOrder Int
+
+  products Product[]
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  contextId    String
+  categoryId   String
+  name         String
+  description  String
+  image        String
+  priceInCents Int
+  status       ProductStatus @default(DRAFT)
+  isAvailable  Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  context  DataContext @relation(fields: [contextId], references: [id], onDelete: Restrict)
+  category Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([contextId, status, isAvailable])
+  @@index([contextId, categoryId])
 }

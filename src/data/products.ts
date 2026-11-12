@@ -1,7 +1,13 @@
-import { Product } from "@/types/product";
+export type SeedProduct = {
+    id: number;
+    category: string;
+    name: string;
+    image: string;
+    price: number;
+};
 
-// Simulação de dados vindo de um servidor externo
-export const products: Product[] = [
+// Dados iniciais usados pelo seed. Os preços desta lista estão em reais.
+export const products: SeedProduct[] = [
     {
         id: 1,
         category: "sushi",

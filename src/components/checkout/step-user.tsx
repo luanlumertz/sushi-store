@@ -8,12 +8,10 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// Usando o Zod para tipar o formulário
 const formSchema = z.object({
     name: z.string().trim().min(2, "Preencha seu nome"),
 });
 
-// Tipando a função recebida via Props
 type Props = {
     setStep: Dispatch<SetStateAction<CheckoutSteps>>;
 };
@@ -21,13 +19,11 @@ type Props = {
 export const StepUser = ({ setStep }: Props) => {
     const { name, setName } = useCheckoutStore((state) => state);
 
-    // Cirando o cérebro do formulário juntamente com o Zod
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { name },
     });
 
-    // Definindo o que acontece caso o dado enviado seja válido, ou seja, setta o nome e vai para a próxima página
     const onSubmit = (values: z.infer<typeof formSchema>) => {
         setName(values.name);
         setStep("address");

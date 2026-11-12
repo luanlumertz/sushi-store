@@ -1,12 +1,34 @@
-import { products } from "@/data/products";
+import "server-only";
+
 import { Product } from "@/types/product";
 
-export const getAllProducts = async (): Promise<Product[]> => {
-    // Cria uma promisse para simular um servidor real com um delay de 2 segundos (utíl para mostrar o Skeleton)
-    return new Promise((resolve) => {
-        return setTimeout(() => {
-            // Envia os dados do "servidor" para quem chamar após 2 seg
-            resolve(products);
-        }, 500);
+export const getStoreProducts = async (): Promise<Product[]> => {
+    // Adia a criação do Client para não exigir DATABASE_URL ao carregar o módulo.
+    const { prisma } = await import("@/lib/prisma");
+
+    const products = await prisma.product.findMany({
+        where: {
+            context: { type: "STORE" },
+            status: "PUBLISHED",
+            isAvailable: true,
+        },
+        select: {
+            id: true,
+            name: true,
+            image: true,
+            priceInCents: true,
+            category: {
+                select: { slug: true },
+            },
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     });
+
+    return products.map((product) => ({
+        id: product.id,
+        category: product.category.slug,
+        name: product.name,
+        image: product.image,
+        priceInCents: product.priceInCents,
+    }));
 };

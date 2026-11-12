@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-// Usando o Zod para tipar o formulário
 const formSchema = z.object({
     street: z.string().min(2, "Preencha o endereço"),
     number: z.string().trim().min(1, "Preencha o número"),
@@ -19,7 +18,6 @@ const formSchema = z.object({
     state: z.string().min(2, "Preencha o estado"),
 });
 
-// Tipando a função recebida via Props
 type Props = {
     setStep: Dispatch<SetStateAction<CheckoutSteps>>;
 };
@@ -27,13 +25,11 @@ type Props = {
 export const StepAddress = ({ setStep }: Props) => {
     const { address, setAddress } = useCheckoutStore((state) => state);
 
-    // Cirando o cérebro do formulário juntamente com o Zod
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: { ...address },
     });
 
-    // Definindo o que acontece caso o dado enviado seja válido, ou seja, setta o endereço completo e vai para a próxima página
     const onSubmit = (values: z.infer<typeof formSchema>) => {
         setAddress(values);
         setStep("finish");
@@ -42,7 +38,6 @@ export const StepAddress = ({ setStep }: Props) => {
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-2 gap-4">
-                {/* Diferente do campo nome aqui serão necessários vaiors <Field>s para cada campo do endereço */}
                 <Field data-invalid={!!form.formState.errors.street}>
                     <FieldLabel htmlFor="checkout-street">Rua</FieldLabel>
                     <Input
@@ -120,9 +115,9 @@ export const StepAddress = ({ setStep }: Props) => {
                     </FieldError>
                 </Field>
 
-                {/* Um campo Field diferente usando o <Select> do shadcn para poder abrir várias opções definidas dos 27 estados do Brasil. */}
                 <Field data-invalid={!!form.formState.errors.state}>
                     <FieldLabel htmlFor="checkout-state">Estado</FieldLabel>
+                    {/* Revalida ao selecionar um estado para limpar o erro anterior. */}
                     <Select
                         defaultValue={address.state}
                         onValueChange={(value) =>
@@ -175,7 +170,6 @@ export const StepAddress = ({ setStep }: Props) => {
             </div>
 
             <div className="flex justify-between mt-4">
-                {/* Botão para voltar */}
                 <Button type="button" variant={"link"} onClick={() => setStep("user")}>
                     Voltar
                 </Button>

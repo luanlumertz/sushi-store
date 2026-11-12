@@ -15,6 +15,7 @@ function createPrismaClient() {
     return new PrismaClient({ adapter });
 }
 
+// Reutiliza o Client entre recargas do Next.js em desenvolvimento.
 const globalForPrisma = globalThis as unknown as {
     prisma?: PrismaClient;
 };

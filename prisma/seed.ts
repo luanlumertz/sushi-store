@@ -3,6 +3,8 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
+import { products } from "@/data/products";
+
 function createPrismaClient() {
     const connectionString = process.env.DATABASE_URL;
 
@@ -15,7 +17,16 @@ function createPrismaClient() {
     return new PrismaClient({ adapter });
 }
 
+// O ID fixo permite reconhecer o contexto oficial ao repetir o seed.
 const STORE_CONTEXT_ID = "00000000-0000-4000-8000-000000000001";
+
+// Categorias predefinidas do MVP, compartilhadas entre Loja e Demo.
+const CATEGORIES = [
+    { name: "Sushi", slug: "sushi", sortOrder: 1 },
+    { name: "Temaki", slug: "temaki", sortOrder: 2 },
+    { name: "Combinados", slug: "pack", sortOrder: 3 },
+    { name: "Bebidas", slug: "beverage", sortOrder: 4 },
+];
 
 async function main() {
     const prisma = createPrismaClient();
@@ -36,6 +47,51 @@ async function main() {
         });
 
         console.log("Contexto da Loja pronto:", storeContext.id);
+
+        for (const category of CATEGORIES) {
+            await prisma.category.upsert({
+                where: { slug: category.slug },
+                update: {
+                    name: category.name,
+                    sortOrder: category.sortOrder,
+                },
+                create: category,
+            });
+        }
+
+        for (const product of products) {
+            const category = await prisma.category.findUniqueOrThrow({
+                where: { slug: product.category },
+            });
+
+            const priceInCents = Math.round(product.price * 100);
+
+            // Estes IDs estáveis são exclusivos dos produtos iniciais da Loja.
+            const productId = `10000000-0000-4000-8000-${String(product.id).padStart(12, "0")}`;
+
+            await prisma.product.upsert({
+                where: {
+                    id: productId,
+                    contextId: storeContext.id,
+                },
+                // Preserva edições administrativas ao executar o seed novamente.
+                update: {},
+                create: {
+                    id: productId,
+                    contextId: storeContext.id,
+                    categoryId: category.id,
+                    name: product.name,
+                    description: `${product.name} do catálogo inicial da Sushi Store.`,
+                    image: product.image,
+                    priceInCents,
+                    // Importa o catálogo já visível; novos cadastros continuam começando em DRAFT.
+                    status: "PUBLISHED",
+                    isAvailable: true,
+                },
+            });
+        }
+
+        console.log("Produtos iniciais processados:", products.length);
     } finally {
         await prisma.$disconnect();
     }
