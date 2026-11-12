@@ -10,12 +10,10 @@ type Props = {
 export const CartItemQuantity = ({ cartItem }: Props) => {
     const { upsertCartItem } = useCartStore((state) => state);
 
-    // Adiciona mais 1 na quantidade.
     const handlePlusButton = () => {
         upsertCartItem(cartItem.product, 1);
     };
 
-    // Subtrai mais 1 na quantidade.
     const handleMinusButton = () => {
         upsertCartItem(cartItem.product, -1);
     };

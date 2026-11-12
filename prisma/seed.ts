@@ -17,8 +17,10 @@ function createPrismaClient() {
     return new PrismaClient({ adapter });
 }
 
+// O ID fixo permite reconhecer o contexto oficial ao repetir o seed.
 const STORE_CONTEXT_ID = "00000000-0000-4000-8000-000000000001";
 
+// Categorias predefinidas do MVP, compartilhadas entre Loja e Demo.
 const CATEGORIES = [
     { name: "Sushi", slug: "sushi", sortOrder: 1 },
     { name: "Temaki", slug: "temaki", sortOrder: 2 },
@@ -64,6 +66,7 @@ async function main() {
 
             const priceInCents = Math.round(product.price * 100);
 
+            // Estes IDs estáveis são exclusivos dos produtos iniciais da Loja.
             const productId = `10000000-0000-4000-8000-${String(product.id).padStart(12, "0")}`;
 
             await prisma.product.upsert({
@@ -71,6 +74,7 @@ async function main() {
                     id: productId,
                     contextId: storeContext.id,
                 },
+                // Preserva edições administrativas ao executar o seed novamente.
                 update: {},
                 create: {
                     id: productId,
@@ -80,6 +84,7 @@ async function main() {
                     description: `${product.name} do catálogo inicial da Sushi Store.`,
                     image: product.image,
                     priceInCents,
+                    // Importa o catálogo já visível; novos cadastros continuam começando em DRAFT.
                     status: "PUBLISHED",
                     isAvailable: true,
                 },
