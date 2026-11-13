@@ -70,3 +70,39 @@ export async function createDemoSession(expiresAt: Date) {
 
     return { token, contextId, expiresAt };
 }
+
+export async function getDemoSessionByToken(token: string) {
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+        return null;
+    }
+
+    const tokenHash = hashDemoToken(token);
+
+    const { prisma } = await import("@/lib/prisma");
+
+    const demoSession = await prisma.demoSession.findUnique({
+        where: {
+            tokenHash,
+        },
+        select: {
+            id: true,
+            contextId: true,
+            contextType: true,
+            expiresAt: true,
+        },
+    });
+
+    if (
+        !demoSession ||
+        demoSession.contextType !== "DEMO" ||
+        demoSession.expiresAt.getTime() <= Date.now()
+    ) {
+        return null;
+    }
+
+    return {
+        id: demoSession.id,
+        contextId: demoSession.contextId,
+        expiresAt: demoSession.expiresAt,
+    };
+}
