@@ -11,11 +11,11 @@ type Props = {
 
 const context = createContext<Registry | null>(null);
 
-export const ContextStoreRegistryProvider = ({ children }: Props) => {
+export function ContextStoreRegistryProvider({ children }: Props) {
     const [registry] = useState(createContextStoreRegistry);
 
     return <context.Provider value={registry}>{children}</context.Provider>;
-};
+}
 
 export function useContextStoreRegistry(): Registry {
     const registry = useContext(context);
