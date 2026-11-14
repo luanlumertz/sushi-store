@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getStoreProducts } from "@/services/product";
+import { getDemoProducts, getStoreProducts } from "@/services/product";
 import { Product } from "@/types/product";
 import { ProductEmpty } from "@/components/products/empty";
 import { ProductItem } from "@/components/products/item";
@@ -12,11 +12,17 @@ type Tab = {
     products: Product[];
 };
 
-export const ProductsTab = async () => {
+type Props = {
+    mode: "STORE" | "DEMO";
+};
+
+export const ProductsTab = async ({ mode }: Props) => {
     // Busca o cardápio a cada requisição, sem fixar os dados no build.
     await connection();
 
-    const [products, categories] = await Promise.all([getStoreProducts(), getCategories()]);
+    const getProducts = mode === "DEMO" ? getDemoProducts : getStoreProducts;
+
+    const [products, categories] = await Promise.all([getProducts(), getCategories()]);
 
     const tabs: Tab[] = categories.map((category) => ({
         title: category.name,

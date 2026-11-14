@@ -10,7 +10,7 @@ const Page = () => {
             <Header />
             <div className="mx-4">
                 <Suspense fallback={<TabsSkeleton />}>
-                    <ProductsTab />
+                    <ProductsTab mode="STORE" />
                 </Suspense>
             </div>
             <Footer />
