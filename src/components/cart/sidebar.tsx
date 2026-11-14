@@ -9,7 +9,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/components/context-stores-provider";
 import { CartItem } from "@/components/cart/item";
 import { useState } from "react";
 import { CheckoutDialog } from "@/components/checkout/dialog";

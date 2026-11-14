@@ -1,6 +1,6 @@
 import { Cart } from "@/types/cart";
 import { Product } from "@/types/product";
-import { create, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 type States = {
@@ -40,8 +40,6 @@ const cartStateCreator: StateCreator<CartStoreState> = (set) => ({
             return { ...state, cart: newCart };
         }),
 });
-
-export const useCartStore = create<CartStoreState>()(cartStateCreator);
 
 export function createCartStore() {
     return createStore<CartStoreState>()(cartStateCreator);

@@ -3,7 +3,7 @@
 import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/components/context-stores-provider";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/format-currency";
 

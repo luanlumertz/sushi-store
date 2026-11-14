@@ -1,4 +1,4 @@
-import { useCheckoutStore } from "@/stores/checkout-store";
+import { useCheckoutStore } from "@/components/context-stores-provider";
 import { CheckoutSteps } from "@/types/checkout-steps";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dispatch, SetStateAction } from "react";

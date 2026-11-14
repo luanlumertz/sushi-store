@@ -1,4 +1,4 @@
-import { create, type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import { createStore } from "zustand/vanilla";
 
 // type para os dados do usuário
@@ -36,9 +36,6 @@ const checkoutStateCreator: StateCreator<CheckoutStoreState> = (set) => ({
     setName: (name) => set((state) => ({ ...state, name })),
     setAddress: (address) => set((state) => ({ ...state, address })),
 });
-
-// implementando de fato as funcionalidades para quem chamar este hook.
-export const useCheckoutStore = create<CheckoutStoreState>()(checkoutStateCreator);
 
 export function createCheckoutStore() {
     return createStore<CheckoutStoreState>()(checkoutStateCreator);
