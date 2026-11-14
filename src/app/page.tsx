@@ -9,7 +9,7 @@ const Page = () => {
     return (
         <div className="w-full max-w-4xl mx-auto">
             <ContextStoresProvider contextKey="STORE">
-                <Header />
+                <Header checkoutEnabled={false} />
                 <div className="mx-4">
                     <Suspense fallback={<TabsSkeleton />}>
                         <ProductsTab mode="STORE" />

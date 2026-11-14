@@ -19,7 +19,11 @@ const CartSidebar = dynamic(
 );
 // Fim das alterações do copilot.
 
-export const Header = () => {
+type Props = {
+    checkoutEnabled: boolean;
+};
+
+export const Header = ({ checkoutEnabled }: Props) => {
     return (
         <header className="flex justify-between items-center p-4">
             <div className="flex items-center gap-3">
@@ -28,7 +32,7 @@ export const Header = () => {
             <div className="flex items-center gap-3">
                 <ThemeToggle />
                 {/* É responsável por mostrar o menu lateral qunado clicado em carrinho */}
-                <CartSidebar />
+                <CartSidebar checkoutEnabled={checkoutEnabled} />
             </div>
         </header>
     );

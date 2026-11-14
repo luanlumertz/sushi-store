@@ -15,7 +15,11 @@ import { useState } from "react";
 import { CheckoutDialog } from "@/components/checkout/dialog";
 import { formatCurrency } from "@/lib/format-currency";
 
-export const CartSidebar = () => {
+type Props = {
+    checkoutEnabled: boolean;
+};
+
+export const CartSidebar = ({ checkoutEnabled }: Props) => {
     const [checkoutOpen, setCheckoutOpen] = useState(false);
     const { cart } = useCartStore((state) => state);
 
@@ -64,7 +68,7 @@ export const CartSidebar = () => {
 
                     <div className="text-center">
                         <Button
-                            disabled={cart.length === 0}
+                            disabled={cart.length === 0 || !checkoutEnabled}
                             className="disabled:cursor-not-allowed"
                             onClick={() => setCheckoutOpen(true)}
                         >
@@ -73,7 +77,13 @@ export const CartSidebar = () => {
                     </div>
                 </div>
 
-                <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+                {checkoutEnabled ? (
+                    <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+                ) : (
+                    <p className="px-4 text-sm text-muted-foreground text-center">
+                        Compras reais estão desabilitadas neste projeto.
+                    </p>
+                )}
             </SheetContent>
         </Sheet>
     );
