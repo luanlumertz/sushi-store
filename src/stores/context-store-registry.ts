@@ -26,5 +26,9 @@ export function createContextStoreRegistry() {
         }
     }
 
-    return { getOrCreate };
+    function remove(contextKey: string): boolean {
+        return storesByContext.delete(contextKey);
+    }
+
+    return { getOrCreate, remove };
 }

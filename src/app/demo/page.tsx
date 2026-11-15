@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { TabsSkeleton } from "@/components/products/skeleton";
 import { ProductsTab } from "@/components/products/tab";
 import { Footer } from "@/components/footer";
+import { RestoreDemoButton } from "@/components/demo/restore-demo-button";
 import Link from "next/link";
 
 const Page = async () => {
@@ -21,18 +22,21 @@ const Page = async () => {
         <div className="w-full max-w-4xl mx-auto">
             <ContextStoresProvider contextKey={`DEMO:${session.contextId}`}>
                 <Header checkoutEnabled={false} />
-                <div className="mx-4">
-                    <p className="text-sm text-muted-foreground">
-                        Modo Demo — catálogo e carrinho exclusivos desta sessão.
-                    </p>
+                <p className="text-sm text-muted-foreground">
+                    Modo Demo — catálogo e carrinho exclusivos desta sessão.
+                </p>
 
+                <div className="my-4 flex flex-wrap items-center gap-4">
                     <Link href="/" className="text-sm underline">
                         Voltar para a Loja
                     </Link>
-                    <Suspense fallback={<TabsSkeleton />}>
-                        <ProductsTab mode="DEMO" />
-                    </Suspense>
+
+                    <RestoreDemoButton contextId={session.contextId} />
                 </div>
+
+                <Suspense fallback={<TabsSkeleton />}>
+                    <ProductsTab mode="DEMO" />
+                </Suspense>
                 <Footer />
             </ContextStoresProvider>
         </div>
