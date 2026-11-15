@@ -1,4 +1,4 @@
-import { useCheckoutStore } from "@/stores/checkout-store";
+import { useCheckoutStore } from "@/components/context-stores-provider";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useGenerateMessage } from "@/lib/generate-message";

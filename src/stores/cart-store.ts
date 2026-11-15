@@ -1,6 +1,7 @@
 import { Cart } from "@/types/cart";
 import { Product } from "@/types/product";
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import { createStore } from "zustand/vanilla";
 
 type States = {
     cart: Cart[];
@@ -10,13 +11,11 @@ type Actions = {
     upsertCartItem: (product: Product, quantity: number) => void;
 };
 
-const initialData: States = {
-    cart: [],
-};
+export type CartStoreState = States & Actions;
 
-export const useCartStore = create<States & Actions>()((set) => ({
-    ...initialData,
-    // A quantidade recebida é uma variação: positiva para adicionar, negativa para retirar.
+const cartStateCreator: StateCreator<CartStoreState> = (set) => ({
+    cart: [],
+
     upsertCartItem: (product, quantity) =>
         set((state) => {
             let newCart = [...state.cart];
@@ -40,4 +39,8 @@ export const useCartStore = create<States & Actions>()((set) => ({
 
             return { ...state, cart: newCart };
         }),
-}));
+});
+
+export function createCartStore() {
+    return createStore<CartStoreState>()(cartStateCreator);
+}

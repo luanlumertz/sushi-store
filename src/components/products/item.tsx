@@ -3,15 +3,16 @@
 import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/components/context-stores-provider";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/format-currency";
 
 type Props = {
     item: Product;
+    loading?: "eager" | "lazy";
 };
 
-export const ProductItem = ({ item }: Props) => {
+export const ProductItem = ({ item, loading = "lazy" }: Props) => {
     const { upsertCartItem } = useCartStore((state) => state);
 
     const handleAddButton = () => {
@@ -34,6 +35,7 @@ export const ProductItem = ({ item }: Props) => {
                     alt={item.name}
                     width={400}
                     height={300}
+                    loading={loading}
                     sizes="(min-width: 896px) 201px, (min-width: 768px) calc(25vw - 23px), (min-width: 640px) calc(33.333vw - 24px), calc(50vw - 26px)"
                     className="w-full h-32 object-fill"
                 />

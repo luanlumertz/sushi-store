@@ -1,4 +1,4 @@
-import { useCheckoutStore } from "@/stores/checkout-store";
+import { useCheckoutStore } from "@/components/context-stores-provider";
 import { CheckoutSteps } from "@/types/checkout-steps";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dispatch, SetStateAction } from "react";
@@ -7,7 +7,13 @@ import { literal, z } from "zod";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
     street: z.string().min(2, "Preencha o endereço"),

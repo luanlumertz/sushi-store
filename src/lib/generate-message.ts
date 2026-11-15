@@ -1,5 +1,4 @@
-import { useCartStore } from "@/stores/cart-store";
-import { useCheckoutStore } from "@/stores/checkout-store";
+import { useCartStore, useCheckoutStore } from "@/components/context-stores-provider";
 
 export const useGenerateMessage = () => {
     // Informações do usuário fornecida pelo Zustand

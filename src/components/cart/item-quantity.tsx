@@ -1,4 +1,4 @@
-import { useCartStore } from "@/stores/cart-store";
+import { useCartStore } from "@/components/context-stores-provider";
 import { Cart } from "@/types/cart";
 import { Button } from "@/components/ui/button";
 import { MinusIcon, PlusIcon } from "lucide-react";
