@@ -112,3 +112,72 @@ async function createDemoContext(tx: Prisma.TransactionClient): Promise<string> 
 
     return context.id;
 }
+
+export async function resetDemoSession(sessionId: string, expectedContextId: string) {
+    const { prisma } = await import("@/lib/prisma");
+
+    return prisma.$transaction(async (tx) => {
+        const session = await tx.demoSession.findUnique({
+            where: {
+                id: sessionId,
+            },
+            select: {
+                id: true,
+                contextId: true,
+                contextType: true,
+                expiresAt: true,
+            },
+        });
+
+        if (
+            !session ||
+            session.contextType !== "DEMO" ||
+            session.contextId !== expectedContextId ||
+            session.expiresAt.getTime() <= Date.now()
+        ) {
+            throw new Error(
+                "Não foi possível restaurar a Demo: sessão inválida, expirada ou com contexto alterado.",
+            );
+        }
+
+        const newContextId = await createDemoContext(tx);
+
+        const updateResult = await tx.demoSession.updateMany({
+            where: {
+                id: sessionId,
+                contextId: expectedContextId,
+                contextType: "DEMO",
+                expiresAt: { gt: new Date() },
+            },
+            data: {
+                contextId: newContextId,
+            },
+        });
+
+        if (updateResult.count !== 1) {
+            throw new Error(
+                "A sessão Demo expirou ou foi alterada. Atualize a página e tente novamente.",
+            );
+        }
+
+        await tx.product.deleteMany({
+            where: {
+                contextId: expectedContextId,
+            },
+        });
+
+        await tx.dataContext.delete({
+            where: {
+                id_type: {
+                    id: expectedContextId,
+                    type: "DEMO",
+                },
+            },
+        });
+
+        return {
+            contextId: newContextId,
+            expiresAt: session.expiresAt,
+        };
+    });
+}
