@@ -53,3 +53,37 @@ export async function getDemoProducts(): Promise<Product[]> {
         context: { type: "DEMO" },
     });
 }
+
+export async function getDemoAdminProducts() {
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    return await prisma.product.findMany({
+        where: {
+            contextId: session.contextId,
+            context: { type: "DEMO" },
+        },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            image: true,
+            priceInCents: true,
+            status: true,
+            isAvailable: true,
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                },
+            },
+        },
+        orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    });
+}
