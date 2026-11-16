@@ -3,6 +3,7 @@ import "server-only";
 import { Product } from "@/types/product";
 import type { Prisma } from "@/generated/prisma/client";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
+import z from "zod";
 
 async function getPublishedProducts(where: Prisma.ProductWhereInput): Promise<Product[]> {
     // Adia a criação do Client para não exigir DATABASE_URL ao carregar o módulo.
@@ -86,4 +87,47 @@ export async function getDemoAdminProducts() {
         },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     });
+}
+
+const setDemoProductAvailabilitySchema = z.object({
+    productId: z.uuid(),
+    isAvailable: z.boolean(),
+});
+
+export async function setDemoProductAvailability(
+    productId: string,
+    isAvailable: boolean,
+): Promise<void> {
+    const input = setDemoProductAvailabilitySchema.parse({ productId, isAvailable });
+
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    const updateResult = await prisma.product.updateMany({
+        where: {
+            id: input.productId,
+            contextId: session.contextId,
+            context: {
+                type: "DEMO",
+                demoSession: {
+                    is: {
+                        id: session.id,
+                        expiresAt: { gt: new Date() },
+                    },
+                },
+            },
+        },
+        data: {
+            isAvailable: input.isAvailable,
+        },
+    });
+
+    if (updateResult.count !== 1) {
+        throw new Error("Não foi possível alterar a disponibilidade deste produto.");
+    }
 }
