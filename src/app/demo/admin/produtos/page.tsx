@@ -1,3 +1,4 @@
+import { ProductAvailabilityButton } from "@/components/demo/admin/product-availability-button";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { formatCurrency } from "@/lib/format-currency";
 import { getDemoAdminProducts } from "@/services/product";
@@ -54,9 +55,16 @@ const Page = async () => {
                                     </span>
                                 </div>
                             </div>
-                            <p className="shrink-0 whitespace-nowrap font-medium tabular-nums">
-                                {formatCurrency(product.priceInCents)}
-                            </p>
+                            <div className="flex shrink-0 flex-col items-end gap-2">
+                                <p className="whitespace-nowrap font-medium tabular-nums">
+                                    {formatCurrency(product.priceInCents)}
+                                </p>
+                                <ProductAvailabilityButton
+                                    productId={product.id}
+                                    productName={product.name}
+                                    isAvailable={product.isAvailable}
+                                />
+                            </div>
                         </li>
                     ))}
                 </ul>
