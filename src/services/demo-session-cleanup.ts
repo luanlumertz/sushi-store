@@ -75,3 +75,28 @@ export async function deleteExpiredDemoSession(
         return true;
     });
 }
+
+export async function cleanupExpiredDemoSessions(limit = 50) {
+    const cutoff = new Date();
+
+    const sessions = await getExpiredDemoSessions(cutoff, limit);
+
+    let deleted = 0;
+    let skipped = 0;
+
+    for (const session of sessions) {
+        const wasDeleted = await deleteExpiredDemoSession(session.id, session.contextId, cutoff);
+
+        if (wasDeleted) {
+            deleted++;
+        } else {
+            skipped++;
+        }
+    }
+
+    return {
+        selected: sessions.length,
+        deleted,
+        skipped,
+    };
+}
