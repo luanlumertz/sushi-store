@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Product } from "@/types/product";
-import type { Prisma } from "@/generated/prisma/client";
+import { ProductStatus, type Prisma } from "@/generated/prisma/client";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import z from "zod";
 
@@ -129,5 +129,48 @@ export async function setDemoProductAvailability(
 
     if (updateResult.count !== 1) {
         throw new Error("Não foi possível alterar a disponibilidade deste produto.");
+    }
+}
+
+const setDemoProductStatusSchema = z.object({
+    productId: z.uuid(),
+    status: z.enum(ProductStatus),
+});
+
+export async function setDemoProductStatus(
+    productId: string,
+    status: ProductStatus,
+): Promise<void> {
+    const input = setDemoProductStatusSchema.parse({ productId, status });
+
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    const updateResult = await prisma.product.updateMany({
+        where: {
+            id: input.productId,
+            contextId: session.contextId,
+            context: {
+                type: "DEMO",
+                demoSession: {
+                    is: {
+                        id: session.id,
+                        expiresAt: { gt: new Date() },
+                    },
+                },
+            },
+        },
+        data: {
+            status: input.status,
+        },
+    });
+
+    if (updateResult.count !== 1) {
+        throw new Error("Não foi possível alterar o estado deste produto.");
     }
 }
