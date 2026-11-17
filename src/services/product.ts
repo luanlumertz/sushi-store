@@ -1,9 +1,10 @@
 import "server-only";
 
+import z from "zod";
 import { Product } from "@/types/product";
 import { ProductStatus, type Prisma } from "@/generated/prisma/client";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
-import z from "zod";
+import { productInputSchema } from "@/schemas/product";
 
 async function getPublishedProducts(where: Prisma.ProductWhereInput): Promise<Product[]> {
     // Adia a criação do Client para não exigir DATABASE_URL ao carregar o módulo.
@@ -173,4 +174,62 @@ export async function setDemoProductStatus(
     if (updateResult.count !== 1) {
         throw new Error("Não foi possível alterar o estado deste produto.");
     }
+}
+
+export async function createDemoProduct(data: unknown): Promise<{ id: string }> {
+    const input = productInputSchema.parse(data);
+
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    const category = await prisma.category.findUnique({
+        where: {
+            id: input.categoryId,
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!category) {
+        throw new Error("Categoria não encontrada.");
+    }
+
+    return await prisma.product.create({
+        data: {
+            name: input.name,
+            description: input.description,
+            image: input.image,
+            priceInCents: input.priceInCents,
+            status: "DRAFT",
+            isAvailable: true,
+            category: {
+                connect: {
+                    id: category.id,
+                },
+            },
+            context: {
+                connect: {
+                    id_type: {
+                        id: session.contextId,
+                        type: "DEMO",
+                    },
+                    demoSession: {
+                        is: {
+                            id: session.id,
+                            expiresAt: { gt: new Date() },
+                        },
+                    },
+                },
+            },
+        },
+        select: {
+            id: true,
+        },
+    });
 }
