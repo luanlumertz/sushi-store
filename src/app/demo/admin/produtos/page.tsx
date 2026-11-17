@@ -1,4 +1,5 @@
 import { ProductAvailabilityButton } from "@/components/demo/admin/product-availability-button";
+import { ProductStatusSelect } from "@/components/demo/admin/product-status-select";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { formatCurrency } from "@/lib/format-currency";
 import { getDemoAdminProducts } from "@/services/product";
@@ -63,6 +64,11 @@ const Page = async () => {
                                     productId={product.id}
                                     productName={product.name}
                                     isAvailable={product.isAvailable}
+                                />
+                                <ProductStatusSelect
+                                    productId={product.id}
+                                    productName={product.name}
+                                    status={product.status}
                                 />
                             </div>
                         </li>
