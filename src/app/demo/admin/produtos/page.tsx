@@ -2,6 +2,7 @@ import { ProductAvailabilityButton } from "@/components/demo/admin/product-avail
 import { ProductStatusSelect } from "@/components/demo/admin/product-status-select";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { formatCurrency } from "@/lib/format-currency";
+import { parseDemoProductSearchParams } from "@/lib/parse-demo-product-search-params";
 import { getDemoAdminProducts } from "@/services/product";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -12,14 +13,35 @@ const productStatusLabels = {
     ARCHIVED: "Arquivado",
 };
 
-const Page = async () => {
+type Props = {
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const Page = async ({ searchParams }: Props) => {
     const session = await getCurrentDemoSession();
 
     if (!session) {
         redirect("/");
     }
 
-    const products = await getDemoAdminProducts();
+    const params = await searchParams;
+    const result = parseDemoProductSearchParams(params);
+
+    if (!result.success) {
+        return (
+            <main className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
+                <h1 className="text-2xl font-semibold">Produtos da Demo</h1>
+
+                <p>Não foi possível aplicar os filtros informados.</p>
+
+                <Link href="/demo/admin/produtos" className="inline-block text-sm underline">
+                    Limpar filtros
+                </Link>
+            </main>
+        );
+    }
+
+    const products = await getDemoAdminProducts(result.data);
 
     return (
         <main className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -39,7 +61,7 @@ const Page = async () => {
 
             {products.length === 0 ? (
                 <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-                    Nenhum produto cadastrado nesta demonstração.
+                    Nenhum produto encontrado.
                 </p>
             ) : (
                 <ul className="divide-y rounded-lg border">
