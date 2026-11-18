@@ -52,6 +52,7 @@
         "typescript": "^5"
     },
     "overrides": {
+        "picomatch": "npm:@ryotsu/picomatch@4.0.7-a",
         "@typescript-eslint/typescript-estree": {
             "minimatch": "11.0.1"
         }
