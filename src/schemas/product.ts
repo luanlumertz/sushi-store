@@ -1,5 +1,6 @@
 import z from "zod";
 import { productImages } from "@/data/product-images";
+import { ProductStatus } from "@/generated/prisma/enums";
 
 export const productInputSchema = z.object({
     name: z
@@ -27,4 +28,21 @@ export const productInputSchema = z.object({
         }),
 });
 
+export const demoProductFiltersSchema = z.object({
+    categoryId: z.uuid().optional(),
+
+    isAvailable: z.boolean().optional(),
+
+    status: z.enum(ProductStatus).optional(),
+
+    search: z
+        .string()
+        .trim()
+        .max(100, {
+            error: "A busca deve ter no máximo 100 caracteres.",
+        })
+        .optional(),
+});
+
+export type DemoProductFilters = z.infer<typeof demoProductFiltersSchema>;
 export type ProductInput = z.infer<typeof productInputSchema>;

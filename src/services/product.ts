@@ -4,7 +4,11 @@ import z from "zod";
 import { Product } from "@/types/product";
 import { ProductStatus, type Prisma } from "@/generated/prisma/client";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
-import { productInputSchema } from "@/schemas/product";
+import {
+    DemoProductFilters,
+    demoProductFiltersSchema,
+    productInputSchema,
+} from "@/schemas/product";
 
 async function getPublishedProducts(where: Prisma.ProductWhereInput): Promise<Product[]> {
     // Adia a criação do Client para não exigir DATABASE_URL ao carregar o módulo.
@@ -56,7 +60,9 @@ export async function getDemoProducts(): Promise<Product[]> {
     });
 }
 
-export async function getDemoAdminProducts() {
+export async function getDemoAdminProducts(filters: DemoProductFilters = {}) {
+    const input = demoProductFiltersSchema.parse(filters);
+
     const session = await getCurrentDemoSession();
 
     if (!session) {
@@ -69,6 +75,17 @@ export async function getDemoAdminProducts() {
         where: {
             contextId: session.contextId,
             context: { type: "DEMO" },
+
+            categoryId: input.categoryId,
+            isAvailable: input.isAvailable,
+            status: input.status,
+
+            name: input.search
+                ? {
+                      contains: input.search,
+                      mode: "insensitive",
+                  }
+                : undefined,
         },
         select: {
             id: true,
