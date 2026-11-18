@@ -74,6 +74,13 @@ const Page = async () => {
                                     productName={product.name}
                                     status={product.status}
                                 />
+                                <Link
+                                    href={`/demo/admin/produtos/${product.id}/editar`}
+                                    aria-label={`Editar ${product.name}`}
+                                    className="text-sm underline"
+                                >
+                                    Editar
+                                </Link>
                             </div>
                         </li>
                     ))}

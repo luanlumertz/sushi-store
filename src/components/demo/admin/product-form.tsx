@@ -1,6 +1,6 @@
 "use client";
 
-import { createDemoProductAction } from "@/app/actions/demo-product";
+import { createDemoProductAction, updateDemoProductAction } from "@/app/actions/demo-product";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -18,34 +18,45 @@ import { type ProductInput, productInputSchema } from "@/schemas/product";
 import type { Category } from "@/types/category";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 type Props = {
     categories: Category[];
+    product?: ProductInput & { id: string };
 };
 
-export function CreateProductForm({ categories }: Props) {
+export function ProductForm({ categories, product }: Props) {
     const router = useRouter();
+    const [priceText, setPriceText] = useState(() =>
+        product ? (product.priceInCents / 100).toFixed(2).replace(".", ",") : "",
+    );
 
     const form = useForm<ProductInput>({
         resolver: zodResolver(productInputSchema),
         defaultValues: {
-            name: "",
-            description: "",
-            categoryId: "",
-            image: "",
+            name: product?.name ?? "",
+            description: product?.description ?? "",
+            categoryId: product?.categoryId ?? "",
+            image: product?.image ?? "",
+            priceInCents: product?.priceInCents ?? Number.NaN,
         },
     });
 
     async function onSubmit(values: ProductInput) {
         try {
-            await createDemoProductAction(values);
+            if (product) {
+                await updateDemoProductAction(product.id, values);
+                toast.success("Produto atualizado.");
+            } else {
+                await createDemoProductAction(values);
+                toast.success("Produto criado como rascunho.");
+            }
 
-            toast.success("Produto criado como rascunho.");
             router.push("/demo/admin/produtos");
         } catch {
-            toast.error("Não foi possível cadastrar o produto. Tente novamente.");
+            toast.error("Não foi possível salvar o produto. Tente novamente.");
         }
     }
 
@@ -90,18 +101,29 @@ export function CreateProductForm({ categories }: Props) {
             <Field data-invalid={!!form.formState.errors.priceInCents}>
                 <FieldLabel htmlFor="product-price">Preço (R$)</FieldLabel>
 
-                <Input
-                    id="product-price"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="Ex.: 49,90"
-                    aria-invalid={!!form.formState.errors.priceInCents}
-                    aria-describedby={
-                        form.formState.errors.priceInCents ? "product-price-error" : undefined
-                    }
-                    {...form.register("priceInCents", {
-                        setValueAs: (value) => parsePriceToCents(String(value ?? "")),
-                    })}
+                <Controller
+                    name="priceInCents"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                        <Input
+                            id="product-price"
+                            name={field.name}
+                            ref={field.ref}
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="Ex.: 49,90"
+                            value={priceText}
+                            onBlur={field.onBlur}
+                            onChange={(event) => {
+                                const text = event.target.value;
+
+                                setPriceText(text);
+                                field.onChange(parsePriceToCents(text));
+                            }}
+                            aria-invalid={fieldState.invalid}
+                            aria-describedby={fieldState.error ? "product-price-error" : undefined}
+                        />
+                    )}
                 />
 
                 <FieldError id="product-price-error">
@@ -190,7 +212,11 @@ export function CreateProductForm({ categories }: Props) {
             />
 
             <Button type="submit" variant="outline" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Cadastrando..." : "Cadastrar"}
+                {form.formState.isSubmitting
+                    ? "Salvando..."
+                    : product
+                      ? "Salvar alterações"
+                      : "Cadastrar"}
             </Button>
         </form>
     );

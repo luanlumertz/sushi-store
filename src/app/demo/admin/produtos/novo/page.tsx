@@ -1,4 +1,4 @@
-import { CreateProductForm } from "@/components/demo/admin/create-product-form";
+import { ProductForm } from "@/components/demo/admin/product-form";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { getCategories } from "@/services/category";
 import Link from "next/link";
@@ -32,7 +32,7 @@ export default async function Page() {
                     O cadastro está indisponível porque não há categorias cadastradas.
                 </p>
             ) : (
-                <CreateProductForm categories={categories} />
+                <ProductForm categories={categories} />
             )}
         </main>
     );
