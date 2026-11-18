@@ -233,3 +233,51 @@ export async function createDemoProduct(data: unknown): Promise<{ id: string }> 
         },
     });
 }
+
+export async function getDemoAdminProductById(productId: string) {
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const parsedId = z.uuid().safeParse(productId);
+
+    if (!parsedId.success) {
+        return null;
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    return await prisma.product.findFirst({
+        where: {
+            id: parsedId.data,
+            contextId: session.contextId,
+            context: {
+                type: "DEMO",
+                demoSession: {
+                    is: {
+                        id: session.id,
+                        expiresAt: { gt: new Date() },
+                    },
+                },
+            },
+        },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            image: true,
+            priceInCents: true,
+            status: true,
+            isAvailable: true,
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                },
+            },
+        },
+    });
+}
