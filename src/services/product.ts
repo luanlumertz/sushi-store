@@ -281,3 +281,56 @@ export async function getDemoAdminProductById(productId: string) {
         },
     });
 }
+
+export async function updateDemoProduct(productId: string, input: unknown): Promise<void> {
+    const parsedId = z.uuid().parse(productId);
+    const data = productInputSchema.parse(input);
+
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        throw new Error("Nenhuma sessão Demo válida encontrada.");
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+
+    const category = await prisma.category.findUnique({
+        where: {
+            id: data.categoryId,
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!category) {
+        throw new Error("Categoria não encontrada.");
+    }
+
+    const updateResult = await prisma.product.updateMany({
+        where: {
+            id: parsedId,
+            contextId: session.contextId,
+            context: {
+                type: "DEMO",
+                demoSession: {
+                    is: {
+                        id: session.id,
+                        expiresAt: { gt: new Date() },
+                    },
+                },
+            },
+        },
+        data: {
+            name: data.name,
+            description: data.description,
+            image: data.image,
+            priceInCents: data.priceInCents,
+            categoryId: category.id,
+        },
+    });
+
+    if (updateResult.count !== 1) {
+        throw new Error("Não foi possível atualizar este produto.");
+    }
+}
