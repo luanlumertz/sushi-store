@@ -6,6 +6,7 @@ import {
     createDemoProduct,
     setDemoProductAvailability,
     setDemoProductStatus,
+    updateDemoProduct,
 } from "@/services/product";
 import { revalidatePath } from "next/cache";
 
@@ -35,4 +36,15 @@ export async function createDemoProductAction(data: ProductInput): Promise<{ id:
     revalidatePath("/demo/admin/produtos");
 
     return product;
+}
+
+export async function updateDemoProductAction(
+    productId: string,
+    data: ProductInput,
+): Promise<void> {
+    await updateDemoProduct(productId, data);
+
+    revalidatePath("/demo/admin/produtos");
+    revalidatePath("/demo");
+    revalidatePath(`/demo/admin/produtos/${productId}/editar`);
 }
