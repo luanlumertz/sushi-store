@@ -31,6 +31,10 @@ const Page = async () => {
                 <Link href="/demo" className="inline-block text-sm underline">
                     Voltar para a Demo
                 </Link>
+                <br />
+                <Link href="/demo/admin/produtos/novo" className="inline-block text-sm underline">
+                    Novo produto
+                </Link>
             </header>
 
             {products.length === 0 ? (
