@@ -1,8 +1,10 @@
 import { ProductAvailabilityButton } from "@/components/demo/admin/product-availability-button";
+import { ProductFilters } from "@/components/demo/admin/product-filters";
 import { ProductStatusSelect } from "@/components/demo/admin/product-status-select";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { formatCurrency } from "@/lib/format-currency";
 import { parseDemoProductSearchParams } from "@/lib/parse-demo-product-search-params";
+import { getCategories } from "@/services/category";
 import { getDemoAdminProducts } from "@/services/product";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -41,7 +43,10 @@ const Page = async ({ searchParams }: Props) => {
         );
     }
 
-    const products = await getDemoAdminProducts(result.data);
+    const [products, categories] = await Promise.all([
+        getDemoAdminProducts(result.data),
+        getCategories(),
+    ]);
 
     return (
         <main className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -58,6 +63,12 @@ const Page = async ({ searchParams }: Props) => {
                     Novo produto
                 </Link>
             </header>
+
+            <ProductFilters
+                key={JSON.stringify(result.data)}
+                categories={categories}
+                filters={result.data}
+            />
 
             {products.length === 0 ? (
                 <p className="rounded-lg border p-4 text-sm text-muted-foreground">
