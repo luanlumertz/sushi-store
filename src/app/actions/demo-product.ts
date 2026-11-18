@@ -1,7 +1,12 @@
 "use server";
 
 import { ProductStatus } from "@/generated/prisma/enums";
-import { setDemoProductAvailability, setDemoProductStatus } from "@/services/product";
+import { ProductInput } from "@/schemas/product";
+import {
+    createDemoProduct,
+    setDemoProductAvailability,
+    setDemoProductStatus,
+} from "@/services/product";
 import { revalidatePath } from "next/cache";
 
 export async function setDemoProductAvailabilityAction(
@@ -22,4 +27,12 @@ export async function setDemoProductStatusAction(
 
     revalidatePath("/demo/admin/produtos");
     revalidatePath("/demo");
+}
+
+export async function createDemoProductAction(data: ProductInput): Promise<{ id: string }> {
+    const product = await createDemoProduct(data);
+
+    revalidatePath("/demo/admin/produtos");
+
+    return product;
 }
