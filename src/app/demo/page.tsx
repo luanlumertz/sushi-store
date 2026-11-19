@@ -35,6 +35,10 @@ const Page = async () => {
                         Gerenciar produtos
                     </Link>
 
+                    <Link href="/demo/admin/configuracoes" className="text-sm underline">
+                        Configurações da Demo
+                    </Link>
+
                     <RestoreDemoButton contextId={session.contextId} />
                 </div>
 
