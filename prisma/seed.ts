@@ -46,6 +46,16 @@ async function main() {
             },
         });
 
+        await prisma.storeSettings.upsert({
+            where: {
+                contextId: storeContext.id,
+            },
+            update: {},
+            create: {
+                contextId: storeContext.id,
+            },
+        });
+
         console.log("Contexto da Loja pronto:", storeContext.id);
 
         for (const category of CATEGORIES) {
