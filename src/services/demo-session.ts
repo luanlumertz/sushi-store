@@ -82,6 +82,9 @@ async function createDemoContext(tx: Prisma.TransactionClient): Promise<string> 
     const context = await tx.dataContext.create({
         data: {
             type: "DEMO",
+            storeSettings: {
+                create: {},
+            },
         },
     });
 
