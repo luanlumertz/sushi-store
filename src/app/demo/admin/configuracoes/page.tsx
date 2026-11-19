@@ -1,3 +1,4 @@
+import { StoreSettingsForm } from "@/components/demo/admin/store-settings-form";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { getDemoStoreSettings } from "@/services/store-settings";
 import Link from "next/link";
@@ -26,17 +27,7 @@ export default async function Page() {
                 </Link>
             </header>
 
-            <dl className="space-y-4 rounded-lg border p-4">
-                <div>
-                    <dt className="text-sm text-muted-foreground">Nome do restaurante</dt>
-                    <dd className="font-medium">{settings.name}</dd>
-                </div>
-
-                <div>
-                    <dt className="text-sm text-muted-foreground">Funcionamento</dt>
-                    <dd className="font-medium">{settings.isOpen ? "Aberto" : "Fechado"}</dd>
-                </div>
-            </dl>
+            <StoreSettingsForm key={settings.contextId} settings={settings} />
         </main>
     );
 }
