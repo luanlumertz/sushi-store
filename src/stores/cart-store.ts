@@ -9,6 +9,7 @@ type States = {
 
 type Actions = {
     upsertCartItem: (product: Product, quantity: number) => void;
+    setCartItemNotes: (productId: string, notes: string) => void;
 };
 
 export type CartStoreState = States & Actions;
@@ -23,7 +24,11 @@ const cartStateCreator: StateCreator<CartStoreState> = (set) => ({
             let productIndex = newCart.findIndex((item) => item.product.id === product.id);
 
             if (productIndex < 0) {
-                newCart.push({ product, quantity: 0 });
+                newCart.push({
+                    product,
+                    quantity: 0,
+                    notes: "",
+                });
                 productIndex = newCart.findIndex((item) => item.product.id === product.id);
             }
 
@@ -39,6 +44,13 @@ const cartStateCreator: StateCreator<CartStoreState> = (set) => ({
 
             return { ...state, cart: newCart };
         }),
+
+    setCartItemNotes: (productId, notes) =>
+        set((state) => ({
+            cart: state.cart.map((item) =>
+                item.product.id === productId ? { ...item, notes } : item,
+            ),
+        })),
 });
 
 export function createCartStore() {
