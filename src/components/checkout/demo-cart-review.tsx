@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { getDemoCheckoutCartAction } from "@/app/actions/demo-checkout";
 import { useCartStore } from "@/components/context-stores-provider";
-import { CartReview } from "@/components/checkout/cart-review";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -14,6 +13,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import type { CheckoutCartInput } from "@/schemas/checkout";
+import { CheckoutFlow } from "./checkout-flow";
 
 type CheckoutCart = Awaited<ReturnType<typeof getDemoCheckoutCartAction>>;
 
@@ -66,9 +66,10 @@ function ReviewButton({ input }: { input: CheckoutCartInput }) {
 
             <DialogContent className="max-h-[85dvh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Revisão do carrinho</DialogTitle>
+                    <DialogTitle>Dados e revisão do pedido</DialogTitle>
                     <DialogDescription>
-                        Confira os itens e os preços atuais. Esta revisão ainda não cria um pedido.
+                        Informe seus dados e confira os itens. Esta revisão ainda não cria um
+                        pedido.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -79,7 +80,7 @@ function ReviewButton({ input }: { input: CheckoutCartInput }) {
                         {error}
                     </p>
                 ) : review ? (
-                    <CartReview cart={review} />
+                    <CheckoutFlow cart={review} />
                 ) : null}
             </DialogContent>
         </Dialog>
