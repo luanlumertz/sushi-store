@@ -1,22 +1,24 @@
+import type {
+    CheckoutAddress,
+    CheckoutCustomer,
+    CheckoutFulfillmentType,
+} from "@/schemas/checkout";
 import type { StateCreator } from "zustand";
 import { createStore } from "zustand/vanilla";
 
-// type para os dados do usuário
-type States = {
-    name: string;
-    address: {
-        street: string;
-        number: string;
-        complement?: string | undefined;
-        district: string;
-        city: string;
-        state: string;
-    };
+type CheckoutAddressDraft = Omit<CheckoutAddress, "state"> & {
+    state: string;
 };
 
-// type para registrar esses dados
+type States = {
+    name: CheckoutCustomer["name"];
+    fulfillmentType: CheckoutFulfillmentType | null;
+    address: CheckoutAddressDraft;
+};
+
 type Actions = {
     setName: (name: States["name"]) => void;
+    setFulfillmentType: (fulfillmentType: CheckoutFulfillmentType) => void;
     setAddress: (address: States["address"]) => void;
 };
 
@@ -24,6 +26,7 @@ export type CheckoutStoreState = States & Actions;
 
 const checkoutStateCreator: StateCreator<CheckoutStoreState> = (set) => ({
     name: "",
+    fulfillmentType: null,
     address: {
         street: "",
         number: "",
@@ -33,8 +36,9 @@ const checkoutStateCreator: StateCreator<CheckoutStoreState> = (set) => ({
         state: "",
     },
 
-    setName: (name) => set((state) => ({ ...state, name })),
-    setAddress: (address) => set((state) => ({ ...state, address })),
+    setName: (name) => set({ name }),
+    setFulfillmentType: (fulfillmentType) => set({ fulfillmentType }),
+    setAddress: (address) => set({ address }),
 });
 
 export function createCheckoutStore() {
