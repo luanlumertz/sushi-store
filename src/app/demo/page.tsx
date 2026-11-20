@@ -11,6 +11,7 @@ import { Footer } from "@/components/footer";
 import { RestoreDemoButton } from "@/components/demo/restore-demo-button";
 import Link from "next/link";
 import { getDemoStoreSettings } from "@/services/store-settings";
+import { DemoCartReview } from "@/components/checkout/demo-cart-review";
 
 const Page = async () => {
     const session = await getCurrentDemoSession();
@@ -24,7 +25,7 @@ const Page = async () => {
     return (
         <div className="w-full max-w-4xl mx-auto">
             <ContextStoresProvider contextKey={`DEMO:${settings.contextId}`}>
-                <Header checkoutEnabled={false} />
+                <Header checkoutEnabled={false} cartAction={<DemoCartReview />} />
 
                 <section className="space-y-1 px-4 py-3">
                     <h1 className="text-xl font-semibold">{settings.name}</h1>

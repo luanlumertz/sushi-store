@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Logo } from "@/components/logo";
+import type { ReactNode } from "react";
 
 // Alteração feita pelo copilot para solucionar erros de Hydratation
 const ThemeToggle = dynamic(
@@ -21,9 +22,10 @@ const CartSidebar = dynamic(
 
 type Props = {
     checkoutEnabled: boolean;
+    cartAction?: ReactNode;
 };
 
-export const Header = ({ checkoutEnabled }: Props) => {
+export const Header = ({ checkoutEnabled, cartAction }: Props) => {
     return (
         <header className="flex justify-between items-center p-4">
             <div className="flex items-center gap-3">
@@ -32,7 +34,7 @@ export const Header = ({ checkoutEnabled }: Props) => {
             <div className="flex items-center gap-3">
                 <ThemeToggle />
                 {/* É responsável por mostrar o menu lateral qunado clicado em carrinho */}
-                <CartSidebar checkoutEnabled={checkoutEnabled} />
+                <CartSidebar checkoutEnabled={checkoutEnabled} cartAction={cartAction} />
             </div>
         </header>
     );
