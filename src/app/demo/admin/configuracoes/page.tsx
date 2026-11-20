@@ -1,3 +1,4 @@
+import { StoreLocationForm } from "@/components/demo/admin/store-location-form";
 import { StoreSettingsForm } from "@/components/demo/admin/store-settings-form";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { getDemoStoreSettings } from "@/services/store-settings";
@@ -27,7 +28,8 @@ export default async function Page() {
                 </Link>
             </header>
 
-            <StoreSettingsForm key={settings.contextId} settings={settings} />
+            <StoreSettingsForm key={`settings:${settings.contextId}`} settings={settings} />
+            <StoreLocationForm key={`location:${settings.contextId}`} settings={settings} />
         </main>
     );
 }
