@@ -1,7 +1,7 @@
 "use client";
 
 import type { ContextStores } from "@/stores/context-store-registry";
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useContextStoreRegistry } from "@/components/context-store-registry-provider";
 import { useStore } from "zustand";
 import type { CartStoreState } from "@/stores/cart-store";
@@ -18,6 +18,12 @@ export function ContextStoresProvider({ contextKey, children }: Props) {
     const registry = useContextStoreRegistry();
 
     const stores = registry.getOrCreate(contextKey);
+
+    useEffect(() => {
+        if (!stores.cartStore.persist.hasHydrated()) {
+            void stores.cartStore.persist.rehydrate();
+        }
+    }, [stores]);
 
     return (
         <context.Provider key={contextKey} value={stores}>

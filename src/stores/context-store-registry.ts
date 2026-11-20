@@ -1,3 +1,4 @@
+import { cartStorage, getCartStorageKey } from "@/lib/cart-storage";
 import { createCartStore } from "@/stores/cart-store";
 import { createCheckoutStore } from "@/stores/checkout-store";
 
@@ -16,7 +17,7 @@ export function createContextStoreRegistry() {
             return store;
         } else {
             const newStores: ContextStores = {
-                cartStore: createCartStore(),
+                cartStore: createCartStore(contextKey),
                 checkoutStore: createCheckoutStore(),
             };
 
@@ -27,6 +28,8 @@ export function createContextStoreRegistry() {
     }
 
     function remove(contextKey: string): boolean {
+        cartStorage.removeItem(getCartStorageKey(contextKey));
+
         return storesByContext.delete(contextKey);
     }
 
