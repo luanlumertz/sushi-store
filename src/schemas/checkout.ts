@@ -73,6 +73,12 @@ export const checkoutFulfillmentSchema = z.discriminatedUnion("fulfillmentType",
     }),
 ]);
 
+export const checkoutReviewInputSchema = checkoutCartInputSchema.extend({
+    customer: checkoutCustomerSchema,
+    fulfillment: checkoutFulfillmentSchema,
+});
+
+export type CheckoutReviewInput = z.infer<typeof checkoutReviewInputSchema>;
 export type CheckoutFulfillment = z.infer<typeof checkoutFulfillmentSchema>;
 export type CheckoutAddress = z.infer<typeof checkoutAddressSchema>;
 export type CheckoutCustomer = z.infer<typeof checkoutCustomerSchema>;

@@ -3,11 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import {
-    checkoutCustomerSchema,
-    checkoutFulfillmentTypeSchema,
-    type CheckoutFulfillmentType,
-} from "@/schemas/checkout";
+import { checkoutCustomerSchema, checkoutFulfillmentTypeSchema } from "@/schemas/checkout";
 import { useCheckoutStore } from "@/components/context-stores-provider";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -20,7 +16,7 @@ const formSchema = checkoutCustomerSchema.extend({
 type FormValues = z.infer<typeof formSchema>;
 
 type Props = {
-    onContinue: (fulfillmentType: CheckoutFulfillmentType) => void;
+    onContinue: (values: FormValues) => void;
 };
 
 export function CheckoutCustomerForm({ onContinue }: Props) {
@@ -40,7 +36,7 @@ export function CheckoutCustomerForm({ onContinue }: Props) {
     function onSubmit(values: FormValues) {
         setName(values.name);
         setFulfillmentType(values.fulfillmentType);
-        onContinue(values.fulfillmentType);
+        onContinue(values);
     }
 
     return (

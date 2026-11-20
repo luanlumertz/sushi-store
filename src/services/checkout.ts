@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
-import { checkoutCartInputSchema } from "@/schemas/checkout";
+import { checkoutCartInputSchema, checkoutReviewInputSchema } from "@/schemas/checkout";
 
 export async function getDemoCheckoutCart(input: unknown) {
     const data = checkoutCartInputSchema.parse(input);
@@ -102,5 +102,19 @@ export async function getDemoCheckoutCart(input: unknown) {
         restaurantName: context.storeSettings?.name ?? "Sushi Store",
         items,
         subtotalInCents,
+    };
+}
+
+export async function getDemoCheckoutReview(input: unknown) {
+    const data = checkoutReviewInputSchema.parse(input);
+
+    const cart = await getDemoCheckoutCart({
+        items: data.items,
+    });
+
+    return {
+        ...cart,
+        customer: data.customer,
+        fulfillment: data.fulfillment,
     };
 }

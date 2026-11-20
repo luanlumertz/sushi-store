@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import type { getDemoCheckoutCartAction } from "@/app/actions/demo-checkout";
+import { useState, useTransition } from "react";
+import {
+    getDemoCheckoutReviewAction,
+    type getDemoCheckoutCartAction,
+} from "@/app/actions/demo-checkout";
+import type { CheckoutReviewInput } from "@/schemas/checkout";
 import { useCheckoutStore } from "@/components/context-stores-provider";
 import { CheckoutCustomerForm } from "@/components/checkout/customer-form";
 import { CheckoutAddressForm } from "@/components/checkout/address-form";
@@ -12,21 +16,66 @@ type Props = {
     cart: Awaited<ReturnType<typeof getDemoCheckoutCartAction>>;
 };
 
+type CheckoutReview = Awaited<ReturnType<typeof getDemoCheckoutReviewAction>>;
+
+type ReviewDetails = Pick<CheckoutReviewInput, "customer" | "fulfillment">;
+
 type Step = "customer" | "address" | "review";
 
 export function CheckoutFlow({ cart }: Props) {
     const [step, setStep] = useState<Step>("customer");
+    const [review, setReview] = useState<CheckoutReview | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isPending, startTransition] = useTransition();
 
     const name = useCheckoutStore((state) => state.name);
     const fulfillmentType = useCheckoutStore((state) => state.fulfillmentType);
-    const address = useCheckoutStore((state) => state.address);
+
+    function requestReview(details: ReviewDetails) {
+        setReview(null);
+        setError(null);
+        setStep("review");
+
+        startTransition(async () => {
+            try {
+                const result = await getDemoCheckoutReviewAction({
+                    items: cart.items.map((item) => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        notes: item.notes,
+                    })),
+                    ...details,
+                });
+
+                setReview(result);
+            } catch {
+                setError(
+                    "Não foi possível revisar o pedido. Confira seus dados, a disponibilidade dos produtos e se o restaurante está aberto.",
+                );
+            }
+        });
+    }
+
+    function handleBack() {
+        setReview(null);
+        setError(null);
+        setStep(fulfillmentType === "DELIVERY" ? "address" : "customer");
+    }
 
     if (step === "customer") {
         return (
             <CheckoutCustomerForm
-                onContinue={(selectedType) =>
-                    setStep(selectedType === "DELIVERY" ? "address" : "review")
-                }
+                onContinue={(values) => {
+                    if (values.fulfillmentType === "DELIVERY") {
+                        setStep("address");
+                        return;
+                    }
+
+                    requestReview({
+                        customer: { name: values.name },
+                        fulfillment: { fulfillmentType: "PICKUP" },
+                    });
+                }}
             />
         );
     }
@@ -35,26 +84,57 @@ export function CheckoutFlow({ cart }: Props) {
         return (
             <CheckoutAddressForm
                 onBack={() => setStep("customer")}
-                onContinue={() => setStep("review")}
+                onContinue={(address) =>
+                    requestReview({
+                        customer: { name },
+                        fulfillment: {
+                            fulfillmentType: "DELIVERY",
+                            address,
+                        },
+                    })
+                }
             />
         );
     }
+
+    if (isPending || (!review && !error)) {
+        return <p role="status">Conferindo os dados do pedido...</p>;
+    }
+
+    if (!review) {
+        return (
+            <div className="space-y-4">
+                <p role="alert" className="text-destructive">
+                    {error}
+                </p>
+
+                <Button type="button" variant="outline" onClick={handleBack}>
+                    Voltar
+                </Button>
+            </div>
+        );
+    }
+
+    const fulfillment = review.fulfillment;
 
     return (
         <div className="space-y-4">
             <section className="space-y-2">
                 <h2 className="font-semibold">Dados do pedido</h2>
-                <p className="wrap-break-word">Nome: {name}</p>
+                <p className="wrap-break-word">Nome: {review.customer.name}</p>
 
-                {fulfillmentType === "DELIVERY" ? (
+                {fulfillment.fulfillmentType === "DELIVERY" ? (
                     <>
                         <p>Modalidade: Entrega</p>
 
                         <p className="whitespace-pre-wrap wrap-break-word">
-                            {address.street}, {address.number}
-                            {address.complement ? ` — ${address.complement}` : ""}
+                            {fulfillment.address.street}, {fulfillment.address.number}
+                            {fulfillment.address.complement
+                                ? ` — ${fulfillment.address.complement}`
+                                : ""}
                             {"\n"}
-                            {address.district} — {address.city}/{address.state.toUpperCase()}
+                            {fulfillment.address.district} — {fulfillment.address.city}/
+                            {fulfillment.address.state.toUpperCase()}
                         </p>
                     </>
                 ) : (
@@ -62,13 +142,9 @@ export function CheckoutFlow({ cart }: Props) {
                 )}
             </section>
 
-            <CartReview cart={cart} />
+            <CartReview cart={review} />
 
-            <Button
-                type="button"
-                variant="outline"
-                onClick={() => setStep(fulfillmentType === "DELIVERY" ? "address" : "customer")}
-            >
+            <Button type="button" variant="outline" onClick={handleBack}>
                 Voltar
             </Button>
         </div>

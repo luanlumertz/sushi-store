@@ -10,7 +10,7 @@ import { checkoutAddressSchema, type CheckoutAddress } from "@/schemas/checkout"
 
 type Props = {
     onBack: () => void;
-    onContinue: () => void;
+    onContinue: (address: CheckoutAddress) => void;
 };
 
 export const CheckoutAddressForm = ({ onBack, onContinue }: Props) => {
@@ -27,10 +27,10 @@ export const CheckoutAddressForm = ({ onBack, onContinue }: Props) => {
         },
     });
 
-    const onSubmit = (values: CheckoutAddress) => {
+    function onSubmit(values: CheckoutAddress) {
         setAddress(values);
-        onContinue();
-    };
+        onContinue(values);
+    }
 
     return (
         <form onSubmit={form.handleSubmit(onSubmit)}>
