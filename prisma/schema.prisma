@@ -74,11 +74,36 @@ model Product {
 }
 
 model StoreSettings {
-  contextId String   @id
-  name      String   @default("Sushi Store")
-  isOpen    Boolean  @default(true)
+  contextId String  @id
+  name      String  @default("Sushi Store")
+  isOpen    Boolean @default(true)
+
+  deliveryBaseFeeInCents          Int @default(600)
+  deliveryIncludedDistanceInMeters Int @default(3000)
+  deliveryExtraFeePerKmInCents     Int @default(200)
+  deliveryMaxDistanceInMeters     Int @default(10000)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  context DataContext @relation(fields: [contextId], references: [id], onDelete: Cascade)
+  context  DataContext    @relation(fields: [contextId], references: [id], onDelete: Cascade)
+  location StoreLocation?
+}
+
+model StoreLocation {
+  contextId        String @id
+  street           String
+  number           String
+  complement       String?
+  district         String
+  city             String
+  state            String
+  formattedAddress String
+  latitude         Float
+  longitude        Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings StoreSettings @relation(fields: [contextId], references: [contextId], onDelete: Cascade)
 }
