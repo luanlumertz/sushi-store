@@ -11,15 +11,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/components/context-stores-provider";
 import { CartItem } from "@/components/cart/item";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CheckoutDialog } from "@/components/checkout/dialog";
 import { formatCurrency } from "@/lib/format-currency";
 
 type Props = {
     checkoutEnabled: boolean;
+    cartAction?: ReactNode;
 };
 
-export const CartSidebar = ({ checkoutEnabled }: Props) => {
+export const CartSidebar = ({ checkoutEnabled, cartAction }: Props) => {
     const [checkoutOpen, setCheckoutOpen] = useState(false);
     const { cart } = useCartStore((state) => state);
 
@@ -67,13 +68,15 @@ export const CartSidebar = ({ checkoutEnabled }: Props) => {
                     <Separator className="my-4" />
 
                     <div className="text-center">
-                        <Button
-                            disabled={cart.length === 0 || !checkoutEnabled}
-                            className="disabled:cursor-not-allowed"
-                            onClick={() => setCheckoutOpen(true)}
-                        >
-                            Finalizar compra
-                        </Button>
+                        {cartAction ?? (
+                            <Button
+                                disabled={cart.length === 0 || !checkoutEnabled}
+                                className="disabled:cursor-not-allowed"
+                                onClick={() => setCheckoutOpen(true)}
+                            >
+                                Finalizar compra
+                            </Button>
+                        )}
                     </div>
                 </div>
 
