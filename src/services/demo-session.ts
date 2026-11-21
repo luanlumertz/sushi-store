@@ -3,6 +3,7 @@ import "server-only";
 import { generateDemoToken, hashDemoToken } from "@/lib/demo-session-token";
 import { products as initialProducts } from "@/data/products";
 import type { Prisma } from "@/generated/prisma/client";
+import { demoStoreLocation } from "@/data/demo-store-location";
 
 export async function createDemoSession(expiresAt: Date) {
     const expirationTime = expiresAt.getTime();
@@ -83,7 +84,17 @@ async function createDemoContext(tx: Prisma.TransactionClient): Promise<string> 
         data: {
             type: "DEMO",
             storeSettings: {
-                create: {},
+                create: {
+                    location: {
+                        create: {
+                            ...demoStoreLocation.address,
+                            complement: demoStoreLocation.address.complement || null,
+                            formattedAddress: demoStoreLocation.formattedAddress,
+                            latitude: demoStoreLocation.coordinates.latitude,
+                            longitude: demoStoreLocation.coordinates.longitude,
+                        },
+                    },
+                },
             },
         },
     });
