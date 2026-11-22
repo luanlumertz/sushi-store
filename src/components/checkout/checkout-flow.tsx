@@ -11,6 +11,8 @@ import { CheckoutCustomerForm } from "@/components/checkout/customer-form";
 import { CheckoutAddressForm } from "@/components/checkout/address-form";
 import { CartReview } from "@/components/checkout/cart-review";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/format-currency";
+import { GeoapifyAttribution } from "../geoapify-attribution";
 
 type Props = {
     cart: Awaited<ReturnType<typeof getDemoCheckoutCartAction>>;
@@ -50,7 +52,7 @@ export function CheckoutFlow({ cart }: Props) {
                 setReview(result);
             } catch {
                 setError(
-                    "Não foi possível revisar o pedido. Confira seus dados, a disponibilidade dos produtos e se o restaurante está aberto.",
+                    "Não foi possível revisar o pedido. Confira os itens, o endereço, a área de entrega e se o restaurante está aberto.",
                 );
             }
         });
@@ -143,6 +145,34 @@ export function CheckoutFlow({ cart }: Props) {
             </section>
 
             <CartReview cart={review} />
+
+            <section className="space-y-3 border-t pt-4">
+                <div className="flex justify-between gap-4">
+                    <span>Frete</span>
+                    <span className="tabular-nums">
+                        {formatCurrency(review.deliveryFeeInCents)}
+                    </span>
+                </div>
+
+                <div className="flex justify-between gap-4 font-semibold">
+                    <span>Total</span>
+                    <span className="tabular-nums">{formatCurrency(review.totalInCents)}</span>
+                </div>
+
+                {review.deliveryQuote && (
+                    <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                            Distância da rota:{" "}
+                            {Math.ceil(review.deliveryQuote.distanceInMeters).toLocaleString(
+                                "pt-BR",
+                            )}{" "}
+                            m
+                        </p>
+
+                        <GeoapifyAttribution />
+                    </div>
+                )}
+            </section>
 
             <Button type="button" variant="outline" onClick={handleBack}>
                 Voltar

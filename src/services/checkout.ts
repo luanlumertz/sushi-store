@@ -2,6 +2,7 @@ import "server-only";
 
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { checkoutCartInputSchema, checkoutReviewInputSchema } from "@/schemas/checkout";
+import { getDemoDeliveryQuote } from "@/services/delivery";
 
 export async function getDemoCheckoutCart(input: unknown) {
     const data = checkoutCartInputSchema.parse(input);
@@ -108,13 +109,34 @@ export async function getDemoCheckoutCart(input: unknown) {
 export async function getDemoCheckoutReview(input: unknown) {
     const data = checkoutReviewInputSchema.parse(input);
 
-    const cart = await getDemoCheckoutCart({
+    const initialCart = await getDemoCheckoutCart({
         items: data.items,
     });
+
+    const deliveryQuote =
+        data.fulfillment.fulfillmentType === "DELIVERY"
+            ? await getDemoDeliveryQuote(initialCart.contextId, data.fulfillment.address)
+            : null;
+
+    const cart = deliveryQuote ? await getDemoCheckoutCart({ items: data.items }) : initialCart;
+
+    if (cart.contextId !== initialCart.contextId) {
+        throw new Error("A demonstração mudou. Atualize a página antes de continuar.");
+    }
+
+    const deliveryFeeInCents = deliveryQuote?.feeInCents ?? 0;
+    const totalInCents = cart.subtotalInCents + deliveryFeeInCents;
+
+    if (!Number.isSafeInteger(totalInCents)) {
+        throw new Error("O total do pedido ultrapassa o limite permitido.");
+    }
 
     return {
         ...cart,
         customer: data.customer,
         fulfillment: data.fulfillment,
+        deliveryQuote,
+        deliveryFeeInCents,
+        totalInCents,
     };
 }
