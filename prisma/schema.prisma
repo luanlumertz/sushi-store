@@ -43,6 +43,20 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum OrderStatusChangeSource {
+  CHECKOUT
+  STRIPE_WEBHOOK
+  CUSTOMER
+  ADMIN
+  DEMO_SIMULATION
+  SYSTEM
+}
+
+enum StripeWebhookEventOutcome {
+  PROCESSED
+  IGNORED
+}
+
 model DataContext {
   id        String      @id() @default(uuid())
   type      ContextType
@@ -93,9 +107,10 @@ model Product {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  context    DataContext @relation(fields: [contextId], references: [id], onDelete: Restrict)
-  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   orderItems OrderItem[]
+
+  context  DataContext @relation(fields: [contextId], references: [id], onDelete: Restrict)
+  category Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@unique([id, contextId])
   @@index([contextId, status, isAvailable])
@@ -115,8 +130,9 @@ model StoreSettings {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  context  DataContext    @relation(fields: [contextId], references: [id], onDelete: Cascade)
   location StoreLocation?
+
+  context DataContext @relation(fields: [contextId], references: [id], onDelete: Cascade)
 }
 
 model StoreLocation {
@@ -144,7 +160,8 @@ model GuestSession {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  orders  Order[]
+  orders Order[]
+
   context DataContext @relation(fields: [contextId], references: [id], onDelete: Cascade)
 
   @@unique([id, contextId])
@@ -176,10 +193,12 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
   context      DataContext   @relation(fields: [contextId], references: [id], onDelete: Cascade)
   guestSession GuestSession? @relation(fields: [guestSessionId, contextId], references: [id, contextId], onDelete: NoAction, onUpdate: NoAction)
-  items        OrderItem[]
-  payments Payment[]
 
   @@unique([id, contextId])
   @@unique([contextId, checkoutRequestId])
@@ -200,8 +219,7 @@ model OrderItem {
   notes            String @default("")
   lineTotalInCents Int
 
-  order Order @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade)
-
+  order   Order   @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade)
   product Product @relation(fields: [productId, contextId], references: [id, contextId], onDelete: Restrict, onUpdate: NoAction)
 
   @@unique([orderId, productId])
@@ -224,12 +242,46 @@ model Payment {
 
   expiresAt DateTime?
   paidAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   order Order @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([id, contextId])
   @@unique([orderId, attemptNumber])
   @@index([contextId, status, createdAt])
+}
+
+model OrderStatusHistory {
+  id           String @id @default(uuid())
+  orderId      String
+  contextId    String
+  orderVersion Int
+
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  source     OrderStatusChangeSource
+  createdAt  DateTime                @default(now())
+
+  order Order @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([orderId, orderVersion])
+}
+
+model StripeWebhookEvent {
+  id       String @id
+  type     String
+  objectId String
+  livemode Boolean
+
+  contextId String?
+  orderId   String?
+  paymentId String?
+
+  outcome        StripeWebhookEventOutcome
+  eventCreatedAt DateTime
+  processedAt    DateTime @default(now())
+
+  @@index([contextId, processedAt])
+  @@index([objectId, type, livemode])
 }
