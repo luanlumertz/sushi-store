@@ -2,10 +2,10 @@ import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
 
-export function generateDemoToken(): string {
+export function generateSessionToken(): string {
     return randomBytes(32).toString("base64url");
 }
 
-export function hashDemoToken(token: string): string {
+export function hashSessionToken(token: string): string {
     return createHash("sha256").update(token).digest("hex");
 }
