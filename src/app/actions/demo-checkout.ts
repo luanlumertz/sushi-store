@@ -1,5 +1,6 @@
 "use server";
 
+import { getOrCreateDemoGuestSession } from "@/lib/guest-session-cookie";
 import type { CheckoutCartInput, CheckoutReviewInput } from "@/schemas/checkout";
 import { getDemoCheckoutCart, getDemoCheckoutReview } from "@/services/checkout";
 
@@ -8,5 +9,9 @@ export async function getDemoCheckoutCartAction(input: CheckoutCartInput) {
 }
 
 export async function getDemoCheckoutReviewAction(input: CheckoutReviewInput) {
-    return getDemoCheckoutReview(input);
+    const review = await getDemoCheckoutReview(input);
+
+    await getOrCreateDemoGuestSession(review.contextId);
+
+    return review;
 }
