@@ -18,6 +18,45 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum FulfillmentType {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT
+  RECEIVED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  READY_FOR_PICKUP
+  PICKED_UP
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUND_PENDING
+  REFUNDED
+}
+
+enum OrderStatusChangeSource {
+  CHECKOUT
+  STRIPE_WEBHOOK
+  CUSTOMER
+  ADMIN
+  DEMO_SIMULATION
+  SYSTEM
+}
+
+enum StripeWebhookEventOutcome {
+  PROCESSED
+  IGNORED
+}
+
 model DataContext {
   id        String      @id() @default(uuid())
   type      ContextType
@@ -26,6 +65,8 @@ model DataContext {
   demoSession   DemoSession?
   products      Product[]
   storeSettings StoreSettings?
+  guestSessions GuestSession[]
+  orders        Order[]
 
   @@unique([id, type])
 }
@@ -66,9 +107,12 @@ model Product {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
+  orderItems OrderItem[]
+
   context  DataContext @relation(fields: [contextId], references: [id], onDelete: Restrict)
   category Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
+  @@unique([id, contextId])
   @@index([contextId, status, isAvailable])
   @@index([contextId, categoryId])
 }
@@ -78,20 +122,21 @@ model StoreSettings {
   name      String  @default("Sushi Store")
   isOpen    Boolean @default(true)
 
-  deliveryBaseFeeInCents          Int @default(600)
+  deliveryBaseFeeInCents           Int @default(600)
   deliveryIncludedDistanceInMeters Int @default(3000)
   deliveryExtraFeePerKmInCents     Int @default(200)
-  deliveryMaxDistanceInMeters     Int @default(10000)
+  deliveryMaxDistanceInMeters      Int @default(10000)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  context  DataContext    @relation(fields: [contextId], references: [id], onDelete: Cascade)
   location StoreLocation?
+
+  context DataContext @relation(fields: [contextId], references: [id], onDelete: Cascade)
 }
 
 model StoreLocation {
-  contextId        String @id
+  contextId        String  @id
   street           String
   number           String
   complement       String?
@@ -106,4 +151,137 @@ model StoreLocation {
   updatedAt DateTime @updatedAt
 
   settings StoreSettings @relation(fields: [contextId], references: [contextId], onDelete: Cascade)
+}
+
+model GuestSession {
+  id        String   @id @default(uuid())
+  contextId String
+  tokenHash String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  orders Order[]
+
+  context DataContext @relation(fields: [contextId], references: [id], onDelete: Cascade)
+
+  @@unique([id, contextId])
+  @@index([expiresAt, id])
+}
+
+model Order {
+  id                String  @id @default(uuid())
+  contextId         String
+  guestSessionId    String?
+  checkoutRequestId String
+
+  customerName   String
+  restaurantName String
+
+  fulfillmentType FulfillmentType
+  status          OrderStatus     @default(AWAITING_PAYMENT)
+  paymentStatus   PaymentStatus   @default(PENDING)
+  version         Int             @default(0)
+
+  subtotalInCents    Int
+  deliveryFeeInCents Int
+  totalInCents       Int
+
+  storeLocationSnapshot    Json?
+  deliveryAddressSnapshot  Json?
+  deliveryDistanceInMeters Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
+  context      DataContext   @relation(fields: [contextId], references: [id], onDelete: Cascade)
+  guestSession GuestSession? @relation(fields: [guestSessionId, contextId], references: [id, contextId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([id, contextId])
+  @@unique([contextId, checkoutRequestId])
+  @@index([contextId, status, createdAt])
+  @@index([guestSessionId, contextId, createdAt])
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  contextId String
+  productId String
+
+  productName      String
+  productImage     String
+  unitPriceInCents Int
+  quantity         Int
+  notes            String @default("")
+  lineTotalInCents Int
+
+  order   Order   @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade)
+  product Product @relation(fields: [productId, contextId], references: [id, contextId], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([orderId, productId])
+  @@index([productId, contextId])
+}
+
+model Payment {
+  id            String @id @default(uuid())
+  orderId       String
+  contextId     String
+  attemptNumber Int
+
+  status        PaymentStatus @default(PENDING)
+  amountInCents Int
+  currency      String        @default("brl")
+  livemode      Boolean       @default(false)
+
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String? @unique
+
+  expiresAt DateTime?
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  order Order @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([id, contextId])
+  @@unique([orderId, attemptNumber])
+  @@index([contextId, status, createdAt])
+}
+
+model OrderStatusHistory {
+  id           String @id @default(uuid())
+  orderId      String
+  contextId    String
+  orderVersion Int
+
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  source     OrderStatusChangeSource
+  createdAt  DateTime                @default(now())
+
+  order Order @relation(fields: [orderId, contextId], references: [id, contextId], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([orderId, orderVersion])
+}
+
+model StripeWebhookEvent {
+  id       String @id
+  type     String
+  objectId String
+  livemode Boolean
+
+  contextId String?
+  orderId   String?
+  paymentId String?
+
+  outcome        StripeWebhookEventOutcome
+  eventCreatedAt DateTime
+  processedAt    DateTime @default(now())
+
+  @@index([contextId, processedAt])
+  @@index([objectId, type, livemode])
 }

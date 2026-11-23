@@ -57,6 +57,12 @@ export async function deleteExpiredDemoSession(
             return false;
         }
 
+        await tx.order.deleteMany({
+            where: {
+                contextId: expectedContextId,
+            },
+        });
+
         await tx.product.deleteMany({
             where: {
                 contextId: expectedContextId,

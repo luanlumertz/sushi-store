@@ -174,6 +174,12 @@ export async function resetDemoSession(sessionId: string, expectedContextId: str
             );
         }
 
+        await tx.order.deleteMany({
+            where: {
+                contextId: expectedContextId,
+            },
+        });
+
         await tx.product.deleteMany({
             where: {
                 contextId: expectedContextId,
