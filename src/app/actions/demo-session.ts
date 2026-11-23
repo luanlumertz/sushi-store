@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentDemoSession, setDemoSessionCookie } from "@/lib/demo-session-cookie";
+import { clearGuestSessionCookie } from "@/lib/guest-session-cookie";
 import { createDemoSession, resetDemoSession } from "@/services/demo-session";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -29,6 +30,8 @@ export async function restoreDemoSession(): Promise<void> {
     }
 
     await resetDemoSession(session.id, session.contextId);
+
+    await clearGuestSessionCookie(session.contextId);
 
     revalidatePath("/demo");
 }

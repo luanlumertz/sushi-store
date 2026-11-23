@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
     getDemoCheckoutReviewAction,
     type getDemoCheckoutCartAction,
@@ -13,27 +13,38 @@ import { CartReview } from "@/components/checkout/cart-review";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format-currency";
 import { GeoapifyAttribution } from "../geoapify-attribution";
+import { createDemoOrderAction } from "@/app/actions/demo-order";
+import { CreateOrderInput } from "@/schemas/order";
+import { CreateOrderButton } from "./create-order-button";
 
 type Props = {
     cart: Awaited<ReturnType<typeof getDemoCheckoutCartAction>>;
+    onOrderPendingChange: (pending: boolean) => void;
 };
 
 type CheckoutReview = Awaited<ReturnType<typeof getDemoCheckoutReviewAction>>;
+
+type CreatedOrder = Awaited<ReturnType<typeof createDemoOrderAction>>;
 
 type ReviewDetails = Pick<CheckoutReviewInput, "customer" | "fulfillment">;
 
 type Step = "customer" | "address" | "review";
 
-export function CheckoutFlow({ cart }: Props) {
+export function CheckoutFlow({ cart, onOrderPendingChange }: Props) {
+    const orderAttempt = useRef<{ signature: string; id: string } | null>(null);
+    const [isPending, startTransition] = useTransition();
     const [step, setStep] = useState<Step>("customer");
     const [review, setReview] = useState<CheckoutReview | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [isPending, startTransition] = useTransition();
+    const [orderInput, setOrderInput] = useState<CreateOrderInput | null>(null);
+    const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
+    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
     const name = useCheckoutStore((state) => state.name);
     const fulfillmentType = useCheckoutStore((state) => state.fulfillmentType);
 
     function requestReview(details: ReviewDetails) {
+        setOrderInput(null);
         setReview(null);
         setError(null);
         setStep("review");
@@ -49,6 +60,31 @@ export function CheckoutFlow({ cart }: Props) {
                     ...details,
                 });
 
+                const input: Omit<CreateOrderInput, "checkoutRequestId"> = {
+                    contextId: result.contextId,
+                    items: result.items.map((item) => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        notes: item.notes,
+                    })),
+                    customer: result.customer,
+                    fulfillment: result.fulfillment,
+                };
+
+                const signature = JSON.stringify(input);
+
+                if (!orderAttempt.current || orderAttempt.current.signature !== signature) {
+                    orderAttempt.current = {
+                        signature,
+                        id: crypto.randomUUID(),
+                    };
+                }
+
+                setOrderInput({
+                    ...input,
+                    checkoutRequestId: orderAttempt.current.id,
+                });
+
                 setReview(result);
             } catch {
                 setError(
@@ -58,10 +94,32 @@ export function CheckoutFlow({ cart }: Props) {
         });
     }
 
+    function handleOrderPendingChange(pending: boolean) {
+        setIsCreatingOrder(pending);
+        onOrderPendingChange(pending);
+    }
+
     function handleBack() {
         setReview(null);
         setError(null);
         setStep(fulfillmentType === "DELIVERY" ? "address" : "customer");
+    }
+
+    if (createdOrder) {
+        return (
+            <div role="status" className="space-y-3">
+                <h2 className="font-semibold">Pedido Demo criado!</h2>
+
+                <p className="break-all">Identificador: {createdOrder.id}</p>
+
+                <p>Total registrado: {formatCurrency(createdOrder.totalInCents)}</p>
+
+                <p className="text-sm text-muted-foreground">
+                    O pedido está aguardando pagamento. O pagamento ainda não está disponível nesta
+                    demonstração.
+                </p>
+            </div>
+        );
     }
 
     if (step === "customer") {
@@ -174,7 +232,15 @@ export function CheckoutFlow({ cart }: Props) {
                 )}
             </section>
 
-            <Button type="button" variant="outline" onClick={handleBack}>
+            {orderInput && (
+                <CreateOrderButton
+                    input={orderInput}
+                    onCreated={setCreatedOrder}
+                    onPendingChange={handleOrderPendingChange}
+                />
+            )}
+
+            <Button type="button" variant="outline" disabled={isCreatingOrder} onClick={handleBack}>
                 Voltar
             </Button>
         </div>

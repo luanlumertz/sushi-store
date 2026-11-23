@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateDemoToken, hashDemoToken } from "@/lib/demo-session-token";
+import { generateSessionToken, hashSessionToken } from "@/lib/session-token";
 import { products as initialProducts } from "@/data/products";
 import type { Prisma } from "@/generated/prisma/client";
 import { demoStoreLocation } from "@/data/demo-store-location";
@@ -12,9 +12,9 @@ export async function createDemoSession(expiresAt: Date) {
         throw new Error("A expiração deve ser uma data válida e futura.");
     }
 
-    const token = generateDemoToken();
+    const token = generateSessionToken();
 
-    const tokenHash = hashDemoToken(token);
+    const tokenHash = hashSessionToken(token);
 
     const { prisma } = await import("@/lib/prisma");
 
@@ -41,7 +41,7 @@ export async function getDemoSessionByToken(token: string) {
         return null;
     }
 
-    const tokenHash = hashDemoToken(token);
+    const tokenHash = hashSessionToken(token);
 
     const { prisma } = await import("@/lib/prisma");
 

@@ -32,6 +32,8 @@ export function DemoCartReview() {
 }
 
 function ReviewButton({ input }: { input: CheckoutCartInput }) {
+    const [open, setOpen] = useState(false);
+    const [isCreatingOrder, setIsCreatingOrder] = useState(false);
     const [review, setReview] = useState<CheckoutCart | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
@@ -53,7 +55,16 @@ function ReviewButton({ input }: { input: CheckoutCartInput }) {
     }
 
     return (
-        <Dialog>
+        <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen && isCreatingOrder) {
+                    return;
+                }
+
+                setOpen(nextOpen);
+            }}
+        >
             <DialogTrigger asChild>
                 <Button
                     type="button"
@@ -64,12 +75,15 @@ function ReviewButton({ input }: { input: CheckoutCartInput }) {
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-h-[85dvh] overflow-y-auto">
+            <DialogContent
+                className="max-h-[85dvh] overflow-y-auto"
+                showCloseButton={!isCreatingOrder}
+            >
                 <DialogHeader>
                     <DialogTitle>Dados e revisão do pedido</DialogTitle>
                     <DialogDescription>
-                        Informe seus dados e confira os itens. Esta revisão ainda não cria um
-                        pedido.
+                        Informe seus dados e confira os itens. O pedido de demonstração será criado
+                        somente ao confirmar no final.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -80,7 +94,7 @@ function ReviewButton({ input }: { input: CheckoutCartInput }) {
                         {error}
                     </p>
                 ) : review ? (
-                    <CheckoutFlow cart={review} />
+                    <CheckoutFlow cart={review} onOrderPendingChange={setIsCreatingOrder} />
                 ) : null}
             </DialogContent>
         </Dialog>
