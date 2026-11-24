@@ -9,6 +9,7 @@ import {
     orderStoreLocationSnapshotSchema,
 } from "@/schemas/order";
 import { GeoapifyAttribution } from "@/components/geoapify-attribution";
+import { OrderTrackingRefresh } from "@/components/demo/order-tracking-refresh";
 
 type Props = {
     params: Promise<{ orderId: string }>;
@@ -20,7 +21,7 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
 });
 
-export default async function Page({ params }: Props) {
+async function Page({ params }: Props) {
     const { orderId } = await params;
     const order = await getDemoOrderById(orderId);
 
@@ -44,6 +45,17 @@ export default async function Page({ params }: Props) {
                 <h1 className="text-2xl font-semibold">Acompanhar pedido</h1>
 
                 <p className="text-sm text-muted-foreground break-all">Pedido Demo: {order.id}</p>
+
+                <OrderTrackingRefresh
+                    key={order.id}
+                    initialState={{
+                        id: order.id,
+                        status: order.status,
+                        paymentStatus: order.paymentStatus,
+                        version: order.version,
+                        updatedAt: order.updatedAt.toISOString(),
+                    }}
+                />
             </header>
 
             <section className="space-y-2">
@@ -182,3 +194,5 @@ export default async function Page({ params }: Props) {
         </main>
     );
 }
+
+export default Page;
