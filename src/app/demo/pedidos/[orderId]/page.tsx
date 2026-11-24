@@ -4,6 +4,11 @@ import { CartReview } from "@/components/checkout/cart-review";
 import { orderStatusLabels, paymentStatusLabels } from "@/data/order-status";
 import { formatCurrency } from "@/lib/format-currency";
 import { getDemoOrderById } from "@/services/order";
+import {
+    orderDeliveryAddressSnapshotSchema,
+    orderStoreLocationSnapshotSchema,
+} from "@/schemas/order";
+import { GeoapifyAttribution } from "@/components/geoapify-attribution";
 
 type Props = {
     params: Promise<{ orderId: string }>;
@@ -22,6 +27,12 @@ export default async function Page({ params }: Props) {
     if (!order) {
         notFound();
     }
+
+    const storeLocation = orderStoreLocationSnapshotSchema.safeParse(order.storeLocationSnapshot);
+
+    const deliveryAddress = orderDeliveryAddressSnapshotSchema.safeParse(
+        order.deliveryAddressSnapshot,
+    );
 
     return (
         <main className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -50,6 +61,73 @@ export default async function Page({ params }: Props) {
                         ? "Entrega"
                         : "Retirada no estabelecimento"}
                 </p>
+            </section>
+
+            <section className="space-y-4">
+                <h2 className="font-semibold">Endereços</h2>
+
+                <div className="space-y-1">
+                    <h3 className="font-medium">
+                        {order.fulfillmentType === "PICKUP" ? "Local da retirada" : "Restaurante"}
+                    </h3>
+
+                    {storeLocation.success ? (
+                        <>
+                            <p className="whitespace-pre-wrap wrap-break-word">
+                                {storeLocation.data.formattedAddress}
+                            </p>
+
+                            {storeLocation.data.complement && (
+                                <p className="whitespace-pre-wrap wrap-break-word">
+                                    Complemento: {storeLocation.data.complement}
+                                </p>
+                            )}
+                        </>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">
+                            Endereço do restaurante indisponível para este pedido.
+                        </p>
+                    )}
+                </div>
+
+                {order.fulfillmentType === "DELIVERY" && (
+                    <div className="space-y-1">
+                        <h3 className="font-medium">Endereço de entrega</h3>
+
+                        {deliveryAddress.success ? (
+                            <>
+                                <p className="whitespace-pre-wrap wrap-break-word">
+                                    {deliveryAddress.data.formattedAddress}
+                                </p>
+
+                                {deliveryAddress.data.address.complement && (
+                                    <p className="whitespace-pre-wrap wrap-break-word">
+                                        Complemento: {deliveryAddress.data.address.complement}
+                                    </p>
+                                )}
+
+                                {order.deliveryDistanceInMeters !== null && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Distância da rota:{" "}
+                                        {Math.ceil(order.deliveryDistanceInMeters).toLocaleString(
+                                            "pt-BR",
+                                        )}{" "}
+                                        m
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                Endereço de entrega indisponível para este pedido.
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {(storeLocation.success ||
+                    (order.fulfillmentType === "DELIVERY" && deliveryAddress.success)) && (
+                    <GeoapifyAttribution />
+                )}
             </section>
 
             <CartReview
