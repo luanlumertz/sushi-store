@@ -38,9 +38,7 @@ export const demoProductFiltersSchema = z.object({
     search: z
         .string()
         .trim()
-        .max(100, {
-            error: "A busca deve ter no máximo 100 caracteres.",
-        })
+        .max(100, { error: "A busca deve ter no máximo 100 caracteres." })
         .optional(),
 });
 

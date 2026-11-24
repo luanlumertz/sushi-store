@@ -1,5 +1,6 @@
 import "server-only";
 
+import z from "zod";
 import { getCurrentDemoGuestSession } from "@/lib/guest-session-cookie";
 import { createOrderInputSchema } from "@/schemas/order";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
@@ -347,4 +348,91 @@ export async function createDemoOrder(input: unknown) {
     }
 
     throw new Error("Não foi possível criar o pedido. Tente novamente.");
+}
+
+export async function getDemoOrderById(orderId: string) {
+    const parsedId = z.uuid().safeParse(orderId);
+
+    if (!parsedId.success) {
+        return null;
+    }
+
+    const session = await getCurrentDemoSession();
+
+    if (!session) {
+        return null;
+    }
+
+    const guestSession = await getCurrentDemoGuestSession(session.contextId);
+
+    if (!guestSession) {
+        return null;
+    }
+
+    const { prisma } = await import("@/lib/prisma");
+    const now = new Date();
+
+    return prisma.order.findUnique({
+        where: {
+            id_contextId: {
+                id: parsedId.data,
+                contextId: session.contextId,
+            },
+            guestSessionId: guestSession.id,
+            guestSession: {
+                is: {
+                    expiresAt: { gt: now },
+                },
+            },
+            context: {
+                type: "DEMO",
+                demoSession: {
+                    is: {
+                        id: session.id,
+                        expiresAt: { gt: now },
+                    },
+                },
+            },
+        },
+        select: {
+            id: true,
+            contextId: true,
+            customerName: true,
+            restaurantName: true,
+            fulfillmentType: true,
+            status: true,
+            paymentStatus: true,
+            version: true,
+            subtotalInCents: true,
+            deliveryFeeInCents: true,
+            totalInCents: true,
+            storeLocationSnapshot: true,
+            deliveryAddressSnapshot: true,
+            deliveryDistanceInMeters: true,
+            createdAt: true,
+            updatedAt: true,
+            items: {
+                orderBy: { id: "asc" },
+                select: {
+                    id: true,
+                    productId: true,
+                    productName: true,
+                    productImage: true,
+                    unitPriceInCents: true,
+                    quantity: true,
+                    notes: true,
+                    lineTotalInCents: true,
+                },
+            },
+            statusHistory: {
+                orderBy: { orderVersion: "asc" },
+                select: {
+                    orderVersion: true,
+                    fromStatus: true,
+                    toStatus: true,
+                    createdAt: true,
+                },
+            },
+        },
+    });
 }

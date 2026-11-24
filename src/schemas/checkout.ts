@@ -68,6 +68,7 @@ export const checkoutFulfillmentSchema = z.discriminatedUnion("fulfillmentType",
         fulfillmentType: z.literal("DELIVERY"),
         address: checkoutAddressSchema,
     }),
+
     z.object({
         fulfillmentType: z.literal("PICKUP"),
     }),
