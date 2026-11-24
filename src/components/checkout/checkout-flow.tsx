@@ -16,6 +16,7 @@ import { GeoapifyAttribution } from "../geoapify-attribution";
 import { createDemoOrderAction } from "@/app/actions/demo-order";
 import { CreateOrderInput } from "@/schemas/order";
 import { CreateOrderButton } from "./create-order-button";
+import Link from "next/link";
 
 type Props = {
     cart: Awaited<ReturnType<typeof getDemoCheckoutCartAction>>;
@@ -118,6 +119,10 @@ export function CheckoutFlow({ cart, onOrderPendingChange }: Props) {
                     O pedido está aguardando pagamento. O pagamento ainda não está disponível nesta
                     demonstração.
                 </p>
+
+                <Button asChild>
+                    <Link href={`/demo/pedidos/${createdOrder.id}`}>Acompanhar pedido</Link>
+                </Button>
             </div>
         );
     }
