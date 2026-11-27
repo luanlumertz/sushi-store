@@ -10,6 +10,7 @@ import {
 } from "@/schemas/order";
 import { GeoapifyAttribution } from "@/components/geoapify-attribution";
 import { OrderTrackingRefresh } from "@/components/demo/order-tracking-refresh";
+import { StartPaymentButton } from "@/components/demo/start-payment-button";
 
 type Props = {
     params: Promise<{ orderId: string }>;
@@ -34,6 +35,10 @@ async function Page({ params }: Props) {
     const deliveryAddress = orderDeliveryAddressSnapshotSchema.safeParse(
         order.deliveryAddressSnapshot,
     );
+
+    const canStartPayment =
+        order.status === "AWAITING_PAYMENT" &&
+        ["PENDING", "FAILED", "EXPIRED"].includes(order.paymentStatus);
 
     return (
         <main className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
@@ -74,6 +79,16 @@ async function Page({ params }: Props) {
                         : "Retirada no estabelecimento"}
                 </p>
             </section>
+
+            {canStartPayment && (
+                <StartPaymentButton
+                    key={order.id}
+                    input={{
+                        contextId: order.contextId,
+                        orderId: order.id,
+                    }}
+                />
+            )}
 
             <section className="space-y-4">
                 <h2 className="font-semibold">Endereços</h2>
