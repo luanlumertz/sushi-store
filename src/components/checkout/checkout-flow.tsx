@@ -116,8 +116,8 @@ export function CheckoutFlow({ cart, onOrderPendingChange }: Props) {
                 <p>Total registrado: {formatCurrency(createdOrder.totalInCents)}</p>
 
                 <p className="text-sm text-muted-foreground">
-                    O pedido está aguardando pagamento. O pagamento ainda não está disponível nesta
-                    demonstração.
+                    O pedido está aguardando pagamento. Acesse o acompanhamento para iniciar um
+                    pagamento de teste.
                 </p>
 
                 <Button asChild>
