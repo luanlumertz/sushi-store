@@ -6,7 +6,7 @@ export const startPaymentInputSchema = z.object({
     orderId: z.uuid({ error: "Pedido inválido." }),
 });
 
-const checkoutMetadataSchema = z
+export const checkoutMetadataSchema = z
     .object({
         contextId: z.uuid(),
         orderId: z.uuid(),
