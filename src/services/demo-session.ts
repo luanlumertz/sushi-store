@@ -2,8 +2,12 @@ import "server-only";
 
 import { generateSessionToken, hashSessionToken } from "@/lib/session-token";
 import { products as initialProducts } from "@/data/products";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { demoStoreLocation } from "@/data/demo-store-location";
+import {
+    expireDemoCheckoutsForCleanup,
+    getDemoPendingPaymentsForCleanup,
+} from "./demo-checkout-cleanup";
 
 export async function createDemoSession(expiresAt: Date) {
     const expirationTime = expiresAt.getTime();
@@ -130,74 +134,135 @@ async function createDemoContext(tx: Prisma.TransactionClient): Promise<string> 
 export async function resetDemoSession(sessionId: string, expectedContextId: string) {
     const { prisma } = await import("@/lib/prisma");
 
-    return prisma.$transaction(async (tx) => {
-        const session = await tx.demoSession.findUnique({
-            where: {
-                id: sessionId,
-            },
-            select: {
-                id: true,
-                contextId: true,
-                contextType: true,
-                expiresAt: true,
-            },
-        });
-
-        if (
-            !session ||
-            session.contextType !== "DEMO" ||
-            session.contextId !== expectedContextId ||
-            session.expiresAt.getTime() <= Date.now()
-        ) {
-            throw new Error(
-                "Não foi possível restaurar a Demo: sessão inválida, expirada ou com contexto alterado.",
-            );
-        }
-
-        const newContextId = await createDemoContext(tx);
-
-        const updateResult = await tx.demoSession.updateMany({
-            where: {
-                id: sessionId,
-                contextId: expectedContextId,
-                contextType: "DEMO",
-                expiresAt: { gt: new Date() },
-            },
-            data: {
-                contextId: newContextId,
-            },
-        });
-
-        if (updateResult.count !== 1) {
-            throw new Error(
-                "A sessão Demo expirou ou foi alterada. Atualize a página e tente novamente.",
-            );
-        }
-
-        await tx.order.deleteMany({
-            where: {
-                contextId: expectedContextId,
-            },
-        });
-
-        await tx.product.deleteMany({
-            where: {
-                contextId: expectedContextId,
-            },
-        });
-
-        await tx.dataContext.delete({
-            where: {
-                id_type: {
-                    id: expectedContextId,
-                    type: "DEMO",
-                },
-            },
-        });
-
-        return {
-            contextId: newContextId,
-            expiresAt: session.expiresAt,
-        };
+    const validSession = await prisma.demoSession.findFirst({
+        where: {
+            id: sessionId,
+            contextId: expectedContextId,
+            contextType: "DEMO",
+            expiresAt: { gt: new Date() },
+        },
+        select: {
+            id: true,
+        },
     });
+
+    if (!validSession) {
+        throw new Error(
+            "Não foi possível restaurar a Demo: sessão inválida, expirada ou com contexto alterado.",
+        );
+    }
+
+    const pendingPayments = await getDemoPendingPaymentsForCleanup(expectedContextId);
+
+    if (pendingPayments.some((payment) => !payment.stripeCheckoutSessionId)) {
+        throw new Error(
+            "Existe uma tentativa de pagamento sem Checkout identificado. Tente abrir o pagamento novamente antes de restaurar a Demo.",
+        );
+    }
+
+    await expireDemoCheckoutsForCleanup(pendingPayments);
+
+    const checkedPayments = new Map(
+        pendingPayments.map((payment) => [payment.id, payment.stripeCheckoutSessionId]),
+    );
+
+    return prisma.$transaction(
+        async (tx) => {
+            const session = await tx.demoSession.findUnique({
+                where: {
+                    id: sessionId,
+                },
+                select: {
+                    id: true,
+                    contextId: true,
+                    contextType: true,
+                    expiresAt: true,
+                },
+            });
+
+            if (
+                !session ||
+                session.contextType !== "DEMO" ||
+                session.contextId !== expectedContextId ||
+                session.expiresAt.getTime() <= Date.now()
+            ) {
+                throw new Error(
+                    "Não foi possível restaurar a Demo: sessão inválida, expirada ou com contexto alterado.",
+                );
+            }
+
+            const currentPendingPayments = await tx.payment.findMany({
+                where: {
+                    contextId: expectedContextId,
+                    status: "PENDING",
+                    livemode: false,
+                },
+                select: {
+                    id: true,
+                    stripeCheckoutSessionId: true,
+                },
+            });
+
+            const hasUncheckedPayment = currentPendingPayments.some(
+                (payment) =>
+                    !payment.stripeCheckoutSessionId ||
+                    checkedPayments.get(payment.id) !== payment.stripeCheckoutSessionId,
+            );
+
+            if (hasUncheckedPayment) {
+                throw new Error(
+                    "As tentativas de pagamento mudaram durante a restauração. Tente novamente.",
+                );
+            }
+
+            const newContextId = await createDemoContext(tx);
+
+            const updateResult = await tx.demoSession.updateMany({
+                where: {
+                    id: sessionId,
+                    contextId: expectedContextId,
+                    contextType: "DEMO",
+                    expiresAt: { gt: new Date() },
+                },
+                data: {
+                    contextId: newContextId,
+                },
+            });
+
+            if (updateResult.count !== 1) {
+                throw new Error(
+                    "A sessão Demo expirou ou foi alterada. Atualize a página e tente novamente.",
+                );
+            }
+
+            await tx.order.deleteMany({
+                where: {
+                    contextId: expectedContextId,
+                },
+            });
+
+            await tx.product.deleteMany({
+                where: {
+                    contextId: expectedContextId,
+                },
+            });
+
+            await tx.dataContext.delete({
+                where: {
+                    id_type: {
+                        id: expectedContextId,
+                        type: "DEMO",
+                    },
+                },
+            });
+
+            return {
+                contextId: newContextId,
+                expiresAt: session.expiresAt,
+            };
+        },
+        {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        },
+    );
 }

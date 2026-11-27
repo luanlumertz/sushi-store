@@ -12,6 +12,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { getAppUrl } from "@/lib/app-url";
 import { randomUUID } from "node:crypto";
 import { getStripe } from "@/lib/stripe";
+import { expireDemoCheckoutIfOpen } from "@/lib/expire-demo-checkout";
 
 export async function prepareDemoPayment(input: unknown) {
     const data = startPaymentInputSchema.parse(input);
@@ -411,26 +412,6 @@ export async function saveDemoCheckoutSession(
     });
 
     return result.count === 1;
-}
-
-async function expireDemoCheckoutIfOpen(
-    checkout: Awaited<ReturnType<typeof getOrCreateDemoCheckoutSession>>,
-): Promise<void> {
-    if (checkout.status !== "open") {
-        return;
-    }
-
-    const stripe = getStripe();
-
-    try {
-        await stripe.checkout.sessions.expire(checkout.id);
-    } catch (error) {
-        const currentCheckout = await stripe.checkout.sessions.retrieve(checkout.id);
-
-        if (currentCheckout.status !== "expired" && currentCheckout.status !== "complete") {
-            throw error;
-        }
-    }
 }
 
 export async function startDemoPayment(input: unknown) {
