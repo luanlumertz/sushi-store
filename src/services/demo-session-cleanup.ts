@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+    expireDemoCheckoutsForCleanup,
+    getDemoPendingPaymentsForCleanup,
+} from "./demo-checkout-cleanup";
+
 export async function getExpiredDemoSessions(cutoff: Date, limit = 50) {
     const cutoffTime = cutoff.getTime();
 
@@ -42,6 +47,26 @@ export async function deleteExpiredDemoSession(
     }
 
     const { prisma } = await import("@/lib/prisma");
+
+    const expiredSession = await prisma.demoSession.findFirst({
+        where: {
+            id: sessionId,
+            contextId: expectedContextId,
+            contextType: "DEMO",
+            expiresAt: { lte: cutoff },
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!expiredSession) {
+        return false;
+    }
+
+    const pendingPayments = await getDemoPendingPaymentsForCleanup(expectedContextId);
+
+    await expireDemoCheckoutsForCleanup(pendingPayments);
 
     return prisma.$transaction(async (tx) => {
         const sessionsDeleted = await tx.demoSession.deleteMany({
