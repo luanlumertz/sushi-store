@@ -232,10 +232,11 @@ model Payment {
   contextId     String
   attemptNumber Int
 
-  status        PaymentStatus @default(PENDING)
-  amountInCents Int
-  currency      String        @default("brl")
-  livemode      Boolean       @default(false)
+  status         PaymentStatus @default(PENDING)
+  amountInCents  Int
+  currency       String        @default("brl")
+  livemode       Boolean       @default(false)
+  checkoutParams Json?
 
   stripeCheckoutSessionId String? @unique
   stripePaymentIntentId   String? @unique
@@ -269,7 +270,7 @@ model OrderStatusHistory {
 }
 
 model StripeWebhookEvent {
-  id       String @id
+  id       String  @id
   type     String
   objectId String
   livemode Boolean
@@ -280,7 +281,7 @@ model StripeWebhookEvent {
 
   outcome        StripeWebhookEventOutcome
   eventCreatedAt DateTime
-  processedAt    DateTime @default(now())
+  processedAt    DateTime                  @default(now())
 
   @@index([contextId, processedAt])
   @@index([objectId, type, livemode])
