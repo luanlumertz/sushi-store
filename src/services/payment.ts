@@ -11,6 +11,7 @@ import { getDemoOrderById } from "@/services/order";
 import { Prisma } from "@/generated/prisma/client";
 import { getAppUrl } from "@/lib/app-url";
 import { randomUUID } from "node:crypto";
+import { getStripe } from "@/lib/stripe";
 
 export async function prepareDemoPayment(input: unknown) {
     const data = startPaymentInputSchema.parse(input);
@@ -286,4 +287,207 @@ export function buildDemoCheckoutParams(
         },
         line_items: lineItems,
     });
+}
+
+export async function getOrCreateDemoCheckoutSession(
+    payment: Awaited<ReturnType<typeof reserveDemoPayment>>,
+) {
+    if (payment.status !== "PENDING" || payment.livemode || payment.currency !== "brl") {
+        throw new Error("Esta tentativa não está disponível para Checkout.");
+    }
+
+    const params = stripeCheckoutParamsSchema.parse(payment.checkoutParams);
+
+    const metadataMatches = [params.metadata, params.payment_intent_data.metadata].every(
+        (metadata) =>
+            metadata.contextId === payment.contextId &&
+            metadata.orderId === payment.orderId &&
+            metadata.paymentId === payment.id,
+    );
+
+    const checkoutTotal = params.line_items.reduce(
+        (sum, item) => sum + item.price_data.unit_amount * item.quantity,
+        0,
+    );
+
+    if (
+        !metadataMatches ||
+        params.client_reference_id !== payment.orderId ||
+        checkoutTotal !== payment.amountInCents ||
+        !payment.expiresAt ||
+        params.expires_at * 1000 !== payment.expiresAt.getTime()
+    ) {
+        throw new Error("Os parâmetros do Checkout não correspondem à tentativa.");
+    }
+
+    const stripe = getStripe();
+
+    const checkout = payment.stripeCheckoutSessionId
+        ? await stripe.checkout.sessions.retrieve(payment.stripeCheckoutSessionId)
+        : await stripe.checkout.sessions.create(params, {
+              idempotencyKey: `demo-checkout:${payment.id}`,
+          });
+
+    if (
+        checkout.livemode ||
+        checkout.mode !== "payment" ||
+        checkout.currency !== payment.currency ||
+        checkout.amount_total !== payment.amountInCents ||
+        checkout.client_reference_id !== payment.orderId ||
+        checkout.metadata?.contextId !== payment.contextId ||
+        checkout.metadata?.orderId !== payment.orderId ||
+        checkout.metadata?.paymentId !== payment.id ||
+        checkout.expires_at !== params.expires_at
+    ) {
+        throw new Error("A sessão Stripe não corresponde à tentativa de pagamento.");
+    }
+
+    return checkout;
+}
+
+export async function saveDemoCheckoutSession(
+    prepared: Awaited<ReturnType<typeof prepareDemoPayment>>,
+    payment: Awaited<ReturnType<typeof reserveDemoPayment>>,
+    checkout: Awaited<ReturnType<typeof getOrCreateDemoCheckoutSession>>,
+): Promise<boolean> {
+    const { prisma } = await import("@/lib/prisma");
+    const now = new Date();
+
+    const paymentIntentId =
+        typeof checkout.payment_intent === "string"
+            ? checkout.payment_intent
+            : checkout.payment_intent?.id;
+
+    const result = await prisma.payment.updateMany({
+        where: {
+            id: payment.id,
+            orderId: prepared.order.id,
+            contextId: prepared.data.contextId,
+            amountInCents: payment.amountInCents,
+            currency: "brl",
+            livemode: false,
+            AND: [
+                {
+                    OR: [
+                        { stripeCheckoutSessionId: null },
+                        { stripeCheckoutSessionId: checkout.id },
+                    ],
+                },
+                ...(paymentIntentId
+                    ? [
+                          {
+                              OR: [
+                                  { stripePaymentIntentId: null },
+                                  { stripePaymentIntentId: paymentIntentId },
+                              ],
+                          },
+                      ]
+                    : []),
+            ],
+            order: {
+                is: {
+                    guestSessionId: prepared.guestSession.id,
+                    guestSession: {
+                        is: {
+                            expiresAt: { gt: now },
+                        },
+                    },
+                    context: {
+                        type: "DEMO",
+                        demoSession: {
+                            is: {
+                                id: prepared.session.id,
+                                expiresAt: { gt: now },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        data: {
+            stripeCheckoutSessionId: checkout.id,
+            ...(paymentIntentId ? { stripePaymentIntentId: paymentIntentId } : {}),
+        },
+    });
+
+    return result.count === 1;
+}
+
+async function expireDemoCheckoutIfOpen(
+    checkout: Awaited<ReturnType<typeof getOrCreateDemoCheckoutSession>>,
+): Promise<void> {
+    if (checkout.status !== "open") {
+        return;
+    }
+
+    const stripe = getStripe();
+
+    try {
+        await stripe.checkout.sessions.expire(checkout.id);
+    } catch (error) {
+        const currentCheckout = await stripe.checkout.sessions.retrieve(checkout.id);
+
+        if (currentCheckout.status !== "expired" && currentCheckout.status !== "complete") {
+            throw error;
+        }
+    }
+}
+
+export async function startDemoPayment(input: unknown) {
+    const prepared = await prepareDemoPayment(input);
+    const payment = await reserveDemoPayment(prepared);
+    const checkout = await getOrCreateDemoCheckoutSession(payment);
+
+    const saved = await saveDemoCheckoutSession(prepared, payment, checkout);
+
+    if (!saved) {
+        await expireDemoCheckoutIfOpen(checkout);
+
+        throw new Error("O pedido ou a sessão mudou durante a preparação do pagamento.");
+    }
+
+    const currentOrder = await getDemoOrderById(payment.orderId);
+
+    if (!currentOrder || currentOrder.contextId !== payment.contextId) {
+        await expireDemoCheckoutIfOpen(checkout);
+
+        throw new Error("O pedido não está mais disponível nesta sessão.");
+    }
+
+    const payableStatuses = ["PENDING", "FAILED", "EXPIRED"];
+
+    if (
+        currentOrder.status !== "AWAITING_PAYMENT" ||
+        !payableStatuses.includes(currentOrder.paymentStatus)
+    ) {
+        await expireDemoCheckoutIfOpen(checkout);
+
+        return {
+            kind: "tracking",
+            orderId: currentOrder.id,
+        } as const;
+    }
+
+    if (checkout.status === "complete") {
+        return {
+            kind: "tracking",
+            orderId: currentOrder.id,
+        } as const;
+    }
+
+    if (checkout.status === "expired") {
+        return {
+            kind: "expired",
+            orderId: currentOrder.id,
+        } as const;
+    }
+
+    if (checkout.status === "open" && checkout.payment_status === "unpaid" && checkout.url) {
+        return {
+            kind: "checkout",
+            url: checkout.url,
+        } as const;
+    }
+
+    throw new Error("A sessão Stripe não está disponível para pagamento.");
 }
