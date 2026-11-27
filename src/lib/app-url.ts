@@ -1,8 +1,17 @@
 import "server-only";
 
-export function getAppUrl(): string {
-    const previewHost =
-        process.env.VERCEL_ENV === "preview" ? process.env.VERCEL_BRANCH_URL?.trim() : undefined;
+export function getAppUrl(requestHost?: string): string {
+    const isPreview = process.env.VERCEL_ENV === "preview";
+    const previewHosts = [process.env.VERCEL_BRANCH_URL, process.env.VERCEL_URL]
+        .map((host) => host?.trim().toLowerCase())
+        .filter((host): host is string => Boolean(host));
+    const incomingHost = requestHost?.trim().toLowerCase();
+
+    if (isPreview && incomingHost && !previewHosts.includes(incomingHost)) {
+        throw new Error("O domínio da requisição não pertence a este Preview.");
+    }
+
+    const previewHost = isPreview ? incomingHost || previewHosts[0] : undefined;
 
     const configuredUrl = previewHost ? `https://${previewHost}` : process.env.APP_URL?.trim();
 

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { getCurrentDemoSession } from "@/lib/demo-session-cookie";
 import { getCurrentDemoGuestSession } from "@/lib/guest-session-cookie";
 import {
@@ -52,11 +53,15 @@ export async function prepareDemoPayment(input: unknown) {
         throw new Error("O valor do pedido não é válido para pagamento.");
     }
 
+    const requestHeaders = await headers();
+    const appUrl = getAppUrl(requestHeaders.get("host") ?? undefined);
+
     return {
         data,
         session,
         guestSession,
         order,
+        appUrl,
     };
 }
 
@@ -263,7 +268,7 @@ export function buildDemoCheckoutParams(
         });
     }
 
-    const returnUrl = new URL(`/demo/pedidos/${order.id}`, getAppUrl()).toString();
+    const returnUrl = new URL(`/demo/pedidos/${order.id}`, prepared.appUrl).toString();
 
     const metadata = {
         contextId: order.contextId,
